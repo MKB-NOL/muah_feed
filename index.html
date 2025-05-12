@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Muah Feed</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .card-hover:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #ff0000, #ff4d4d);
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-900 font-sans">
+  <!-- Header -->
+  <header class="sticky top-0 z-50 gradient-bg p-4 shadow-lg">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-3xl font-extrabold tracking-tight text-white">Muah Feed</h1>
+      <div class="flex items-center space-x-4">
+        <nav class="hidden md:flex space-x-6">
+          <a href="#" class="text-white hover:text-red-200 transition">Home</a>
+          <a href="#" class="text-white hover:text-red-200 transition">News</a>
+          <a href="#" class="text-white hover:text-red-200 transition">Vlogs</a>
+          <a href="#" class="text-white hover:text-red-200 transition">Trends</a>
+        </nav>
+        <div class="relative">
+          <input type="text" id="search" placeholder="Search posts..." class="bg-gray-100 text-gray-900 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500">
+          <button onclick="searchPosts()" class="absolute right-2 top-2 text-gray-500 hover:text-red-500">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Subscribe Banner -->
+  <section class="bg-red-100 py-6">
+    <div class="container mx-auto text-center">
+      <h2 class="text-2xl font-bold mb-4">Join the Muah Feed Fam!</h2>
+      <a href="https://www.youtube.com/channel/UCg9U7NsZ3MQuqgDoHeItUrQ?sub_confirmation=1" target="_blank" class="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full transition">Subscribe on YouTube</a>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main class="container mx-auto py-12">
+    <div id="post-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+      <!-- Post Card 1 -->
+      <div class="bg-gray-50 rounded-xl overflow-hidden card-hover transition-transform duration-300">
+        <img src="https://via.placeholder.com/400x200?text=Hot+News" alt="Post Image" class="w-full h-56 object-cover">
+        <div class="p-6">
+          <h2 class="text-2xl font-bold mb-3">Latest News Drop!</h2>
+          <p class="text-gray-600 mb-4">Catch up on the hottest stories making waves this week!</p>
+          <a href="#" class="text-red-600 hover:text-red-500 font-semibold">Read More</a>
+        </div>
+      </div>
+      <!-- Post Card 2 -->
+      <div class="bg-gray-50 rounded-xl overflow-hidden card-hover transition-transform duration-300">
+        <img src="https://via.placeholder.com/400x200?text=Vlog+Life" alt="Post Image" class="w-full h-56 object-cover">
+        <div class="p-6">
+          <h2 class="text-2xl font-bold mb-3">Behind-the-Scenes Vlog</h2>
+          <p class="text-gray-600 mb-4">Get a sneak peek into the Muah Feed life. It's lit!</p>
+          <a href="#" class="text-red-600 hover:text-red-500 font-semibold">Read More</a>
+        </div>
+      </div>
+      <!-- Post Card 3 -->
+      <div class="bg-gray-50 rounded-xl overflow-hidden card-hover transition-transform duration-300">
+        <img src="https://via.placeholder.com/400x200?text=Trend+Alert" alt="Post Image" class="w-full h-56 object-cover">
+        <div class="p-6">
+          <h2 class="text-2xl font-bold mb-3">What's Trending Now</h2>
+          <p class="text-gray-600 mb-4">From viral challenges to new tech, we got the scoop!</p>
+          <a href="#" class="text-red-600 hover:text-red-500 font-semibold">Read More</a>
+        </div>
+      </div>
+    </div>
+    <!-- Load More Button -->
+    <div class="text-center mt-12">
+      <button onclick="loadMorePosts()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full transition">Load More Posts</button>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="gradient-bg py-8">
+    <div class="container mx-auto text-center">
+      <p class="text-white">© 2025 Muah Feed. Stay vibin'.</p>
+      <div class="mt-4 flex justify-center space-x-6">
+        <a href="https://www.youtube.com/channel/UCg9U7NsZ3MQuqgDoHeItUrQ" target="_blank" class="text-white hover:text-red-200">YouTube</a>
+        <a href="#" class="text-white hover:text-red-200">About</a>
+        <a href="#" class="text-white hover:text-red-200">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function searchPosts() {
+      const query = document.getElementById('search').value;
+      alert(`Searching for: ${query || 'Nothing entered!'}`);
+      // Add real search logic here (e.g., filter posts or API call)
+    }
+
+    function loadMorePosts() {
+      const grid = document.getElementById('post-grid');
+      const newPost = `
+        <div class="bg-gray-50 rounded-xl overflow-hidden card-hover transition-transform duration-300">
+          <img src="https://via.placeholder.com/400x200?text=New+Post" alt="Post Image" class="w-full h-56 object-cover">
+          <div class="p-6">
+            <h2 class="text-2xl font-bold mb-3">Fresh Post Alert!</h2>
+            <p class="text-gray-600 mb-4">Another banger just dropped. Check it out!</p>
+            <a href="#" class="text-red-600 hover:text-red-500 font-semibold">Read More</a>
+          </div>
+        </div>
+      `;
+      grid.insertAdjacentHTML('beforeend', newPost);
+    }
+  </script>
