@@ -234,92 +234,7 @@
           </a>
           <a href="https://www.youtube.com/channel/UCg9U7NsZ3MQuqgDoHeItUrQ" target="_blank" class="text-gray-400 hover:text-white transition">
             <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path fill-rule="evenodd" d="M19.812 5.418c.861.23 1.538.907 1.768 1.768C21.998 8.746 22 12 22 12s0 3.255-.418 4.814a2.504 2.504 0 0 1-1.768 1.768c-1.56.419-7.814.419-7.814.419s-6.255 0-7.814-.419a2.505 2.505 0 0 1-1.768-1.768C2 15.255 2 12 2 12s0-3.255.417-4.814a2.507 2.507 0 0 1 1.768-1.768C5.744 5 11.998 5 11.998 5s6.255 0 7.814.418ZM15.194 12 10 15V9l5.194 3Z" clip-rule="evenodd"></path>
-            </svg>
-          </a>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  <!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js";
-    import { getFirestore, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
-
-    // Firebase Configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyCW2RJIku0JLJZTUu0YA9yKO8zjtX29fAo",
-      authDomain: "muah-feed.firebaseapp.com",
-      databaseURL: "https://muah-feed-default-rtdb.firebaseio.com",
-      projectId: "muah-feed",
-      storageBucket: "muah-feed.firebasestorage.app",
-      messagingSenderId: "442314397706",
-      appId: "1:442314397706:web:ebd610cf623b01253667f3",
-      measurementId: "G-FGBFJFBLM7"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const dbRealtime = getDatabase(app);
-    const dbFirestore = getFirestore(app);
-
-    // Load Posts from Realtime Database and Firestore
-    let allPosts = [];
-    function loadPosts() {
-      const featuredPostGrid = document.getElementById('featured-post-grid');
-      const allPostGrid = document.getElementById('all-post-grid');
-
-      // Realtime Database Posts
-      const postsRefRealtime = ref(dbRealtime, 'posts');
-      onValue(postsRefRealtime, (snapshot) => {
-        const posts = [];
-        snapshot.forEach((childSnapshot) => {
-          posts.push({ id: childSnapshot.key, source: 'realtime', ...childSnapshot.val() });
-        });
-        console.log('Realtime Database posts:', posts);
-        updatePosts(posts);
-      }, (error) => {
-        console.error('Error fetching Realtime Database posts:', error);
-      });
-
-      // Firestore Posts
-      const postsRefFirestore = collection(dbFirestore, 'posts');
-      onSnapshot(postsRefFirestore, (snapshot) => {
-        const posts = [];
-        snapshot.forEach((doc) => {
-          posts.push({ id: doc.id, source: 'firestore', ...doc.data() });
-        });
-        console.log('Firestore posts:', posts);
-        updatePosts(posts);
-      }, (error) => {
-        console.error('Error fetching Firestore posts:', error);
-      });
-
-      function updatePosts(newPosts) {
-        allPosts = [...allPosts.filter(p => !newPosts.some(np => np.id === p.id && np.source === p.source)), ...newPosts];
-        allPosts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // Sort by timestamp descending
-        console.log('All sorted posts:', allPosts);
-        renderPosts();
-        updateSearchResults(document.getElementById('search').value);
-      }
-
-      function renderPosts() {
-        // Featured Posts (6 newest)
-        featuredPostGrid.innerHTML = '';
-        allPosts.slice(0, 6).forEach((post, index) => {
-          const postElement = createPostElement(post, index + 1);
-          featuredPostGrid.appendChild(postElement);
-        });
-
-        // All Posts
-        allPostGrid.innerHTML = '';
-        allPosts.forEach((post, index) => {
-          const postElement = createPostElement(post, index + 1);
-          allPostGrid.appendChild(postElement);
-        });
-      }
+              <path fill-rule="evenodd" d="M19.812 5.418c.861.23 1.538.907 1.768 1.768C21.998 8.746 22 12 22 12s0 3.255-.418 4.814a2.504 2.504 0 0 1-1.768 1.768c-1.56.419-7.814.419-7.814.419s-6.255 0-7.814-.419a2.505 2.505 0 0 1-1.768-1.768C2 15.255 2 12 2 12s0-3.255.417-4.814a2.507 2 торговли
 
       function createPostElement(post, index) {
         console.log(`Creating post element for index ${index}:`, post);
@@ -327,7 +242,7 @@
         postElement.className = 'bg-white rounded-xl overflow-hidden shadow-md card-hover animate-fade-in';
         postElement.innerHTML = `
           <div class="relative">
-            <img src="${post.imageUrl || 'https://via.placeholder.com/800x400?text=' + encodeURIComponent(post.title || 'No Title')}" 
+            <img src="${post.imageUrl || 'https://via.placeholder.com/800x400?text=' + encodeURIComponent(post wre.title || 'No Title')}" 
                  alt="${post.title || 'Post'}" class="w-full h-56 object-cover">
             <div class="absolute top-4 left-4 bg-primary-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
               New
@@ -341,7 +256,7 @@
             </div>
             <h3 class="text-xl font-bold mb-3">${post.title || 'Untitled'}</h3>
             <p class="text-gray-600 mb-4">${(post.content || '').replace(/<[^>]+>/g, '').substring(0, 100)}...</p>
-            <a href="posts/post${index}.html" class="text-primary-600 hover:text-primary-800 font-medium inline-flex items-center">
+            <a href="see.html?id=${post.id}&source=${post.source}" class="text-primary-600 hover:text-primary-800 font-medium inline-flex items-center">
               Read more
               <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -381,7 +296,8 @@
       }
     });
 
-    // Search Functionality
+    // Search Functionality
+
     const searchInput = document.getElementById('search');
     const searchResults = document.getElementById('search-results');
     let debounceTimeout;
