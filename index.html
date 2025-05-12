@@ -92,14 +92,19 @@
         <a href="/" class="flex items-center">
           <h1 class="text-2xl font-bold gradient-text">Muah Feed</h1>
         </a>
-        <div class="relative w-full md:w-auto">
-          <input type="text" id="search" placeholder="Search posts..." 
-                 class="w-full md:w-64 pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-          <button onclick="searchPosts()" class="absolute right-3 top-2 text-gray-400 hover:text-primary-600">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-          </button>
+        <div class="flex items-center space-x-4">
+          <div class="relative">
+            <input type="text" id="search" placeholder="Search posts..." 
+                   class="w-full md:w-64 pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+            <button onclick="searchPosts()" class="absolute right-3 top-2 text-gray-400 hover:text-primary-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </button>
+          </div>
+          <a href="post.html" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-4 py-2 rounded-lg transition duration-300 border-highlight">
+            Post
+          </a>
         </div>
       </div>
     </div>
@@ -124,76 +129,42 @@
 
   <!-- Main Content -->
   <main class="container mx-auto px-4 py-12">
+    <!-- Featured Posts -->
     <section id="featured-posts" class="mb-16">
       <div class="flex justify-between items-center mb-8">
-        <h2 class="text-3xl font-bold text-gray-900">Featured Posts</h2>
-        <a href="#" class="text-primary-600 hover:text-primary-800 font-medium flex items-center">
+        <h2 class="text-3xl font-bold text-gray-900">New Released</h2>
+        <a href="#all-posts" class="text-primary-600 hover:text-primary-800 font-medium flex items-center">
           View all
           <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
           </svg>
         </a>
       </div>
-      <div id="post-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <!-- Posts will be dynamically loaded here -->
+      <div id="featured-post-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Newest 6 posts will be loaded here -->
       </div>
     </section>
 
-    <!-- Video Section -->
-    <section class="mb-16">
-      <h2 class="text-3xl font-bold text-gray-900 mb-8 animate-fade-in">Latest Videos</h2>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div class="bg-white rounded-xl overflow-hidden shadow-md animate-fade-in">
-          <div class="aspect-w-16 aspect-h-9">
-            <iframe class="w-full h-96" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-          </div>
-          <div class="p-6">
-            <h3 class="text-xl font-bold mb-2">Our Most Popular Video Yet</h3>
-            <p class="text-gray-600 mb-4">Watch as we break down the most talked-about topic this month with expert analysis.</p>
-            <div class="flex justify-between items-center text-sm text-gray-500">
-              <span>125K views</span>
-              <span>2 days ago</span>
-            </div>
-          </div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div class="bg-white rounded-xl overflow-hidden shadow-md animate-fade-in">
-            <div class="aspect-w-16 aspect-h-9">
-              <img src="https://via.placeholder.com/400x225?text=Behind+the+Scenes" alt="Video thumbnail" class="w-full h-full object-cover">
-            </div>
-            <div class="p-4">
-              <h3 class="font-bold mb-1">Behind the Scenes</h3>
-              <p class="text-sm text-gray-600">A day in the life of our team</p>
-            </div>
-          </div>
-          <div class="bg-white rounded-xl overflow-hidden shadow-md animate-fade-in">
-            <div class="aspect-w-16 aspect-h-9">
-              <img src="https://via.placeholder.com/400x225?text=Trend+Analysis" alt="Video thumbnail" class="w-full h-full object-cover">
-            </div>
-            <div class="p-4">
-              <h3 class="font-bold mb-1">Trend Analysis</h3>
-              <p class="text-sm text-gray-600">What's hot right now</p>
-            </div>
-          </div>
-          <div class="bg-white rounded-xl overflow-hidden shadow-md animate-fade-in">
-            <div class="aspect-w-16 aspect-h-9">
-              <img src="https://via.placeholder.com/400x225?text=Community+Q%26A" alt="Video thumbnail" class="w-full h-full object-cover">
-            </div>
-            <div class="p-4">
-              <h3 class="font-bold mb-1">Community Q&A</h3>
-              <p class="text-sm text-gray-600">Answering your questions</p>
-            </div>
-          </div>
-          <div class="bg-white rounded-xl overflow-hidden shadow-md animate-fade-in">
-            <div class="aspect-w-16 aspect-h-9">
-              <img src="https://via.placeholder.com/400x225?text=Tutorial" alt="Video thumbnail" class="w-full h-full object-cover">
-            </div>
-            <div class="p-4">
-              <h3 class="font-bold mb-1">Tutorial</h3>
-              <p class="text-sm text-gray-600">How we edit our videos</p>
-            </div>
-          </div>
-        </div>
+    <!-- All Posts -->
+    <section id="all-posts" class="mb-16">
+      <h2 class="text-3xl font-bold text-gray-900 mb-8 animate-fade-in">All Posts</h2>
+      <div id="all-post-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- All posts will be loaded here -->
+      </div>
+    </section>
+
+    <!-- Join Newsletter -->
+    <section class="bg-white rounded-xl shadow-md p-8 mb-16">
+      <div class="max-w-3xl mx-auto text-center">
+        <h2 class="text-2xl md:text-3xl font-bold mb-4 animate-fade-in">Join Our Newsletter</h2>
+        <p class="text-gray-600 mb-6 animate-fade-in">Stay updated with the latest posts and exclusive content!</p>
+        <form id="newsletter-form" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+          <input type="email" id="newsletter-email" placeholder="Your email address" required 
+                 class="flex-grow px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 animate-fade-in">
+          <button type="submit" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-300 border-highlight animate-fade-in">
+            Subscribe
+          </button>
+        </form>
       </div>
     </section>
   </main>
@@ -210,7 +181,7 @@
           <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
           <ul class="space-y-2">
             <li><a href="#" class="text-gray-400 hover:text-white transition">Home</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-white transition">Videos</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition">Posts</a></li>
             <li><a href="#" class="text-gray-400 hover:text-white transition">News</a></li>
             <li><a href="#" class="text-gray-400 hover:text-white transition">About</a></li>
           </ul>
@@ -264,7 +235,8 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, limitToLast } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js";
+    import { getFirestore, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
 
     // Firebase Configuration
     const firebaseConfig = {
@@ -280,54 +252,109 @@
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
+    const dbRealtime = getDatabase(app);
+    const dbFirestore = getFirestore(app);
 
-    // Load and Display Posts
+    // Load Posts from Realtime Database and Firestore
     function loadPosts() {
-      const postGrid = document.getElementById('post-grid');
-      const postsRef = ref(database, 'posts');
-      onValue(limitToLast(3)(postsRef), (snapshot) => {
-        postGrid.innerHTML = '';
-        let postIndex = 1;
+      const featuredPostGrid = document.getElementById('featured-post-grid');
+      const allPostGrid = document.getElementById('all-post-grid');
+      let allPosts = [];
+
+      // Realtime Database Posts
+      const postsRefRealtime = ref(dbRealtime, 'posts');
+      onValue(postsRefRealtime, (snapshot) => {
         const posts = [];
         snapshot.forEach((childSnapshot) => {
-          posts.push({ key: childSnapshot.key, ...childSnapshot.val() });
+          posts.push({ id: childSnapshot.key, source: 'realtime', ...childSnapshot.val() });
         });
-        posts.reverse().forEach((post) => {
-          const postElement = document.createElement('article');
-          postElement.className = 'bg-white rounded-xl overflow-hidden shadow-md card-hover animate-fade-in';
-          postElement.innerHTML = `
-            <div class="relative">
-              <img src="${post.imageUrl || 'https://via.placeholder.com/800x400?text=' + encodeURIComponent(post.title)}" 
-                   alt="${post.title}" class="w-full h-56 object-cover">
-              <div class="absolute top-4 left-4 bg-primary-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                New
-              </div>
-            </div>
-            <div class="p-6">
-              <div class="flex items-center text-sm text-gray-500 mb-2">
-                <span>${new Date(post.timestamp).toLocaleDateString()}</span>
-                <span class="mx-2">•</span>
-                <span>${Math.ceil(post.content.replace(/<[^>]+>/g, '').length / 200)} min read</span>
-              </div>
-              <h3 class="text-xl font-bold mb-3">${post.title}</h3>
-              <p class="text-gray-600 mb-4">${post.content.replace(/<[^>]+>/g, '').substring(0, 100)}...</p>
-              <a href="posts/post${postIndex}.html" class="text-primary-600 hover:text-primary-800 font-medium inline-flex items-center">
-                Read more
-                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-              </a>
-            </div>
-          `;
-          postGrid.appendChild(postElement);
-          postIndex++;
-        });
+        updatePosts(posts);
       });
+
+      // Firestore Posts
+      const postsRefFirestore = collection(dbFirestore, 'posts');
+      onSnapshot(postsRefFirestore, (snapshot) => {
+        const posts = [];
+        snapshot.forEach((doc) => {
+          posts.push({ id: doc.id, source: 'firestore', ...doc.data() });
+        });
+        updatePosts(posts);
+      });
+
+      function updatePosts(newPosts) {
+        allPosts = [...allPosts.filter(p => !newPosts.some(np => np.id === p.id && np.source === p.source)), ...newPosts];
+        allPosts.sort((a, b) => b.timestamp - a.timestamp); // Sort by timestamp descending
+
+        // Featured Posts (6 newest)
+        featuredPostGrid.innerHTML = '';
+        allPosts.slice(0, 6).forEach((post, index) => {
+          const postElement = createPostElement(post, index + 1);
+          featuredPostGrid.appendChild(postElement);
+        });
+
+        // All Posts
+        allPostGrid.innerHTML = '';
+        allPosts.forEach((post, index) => {
+          const postElement = createPostElement(post, index + 1);
+          allPostGrid.appendChild(postElement);
+        });
+      }
+
+      function createPostElement(post, index) {
+        const postElement = document.createElement('article');
+        postElement.className = 'bg-white rounded-xl overflow-hidden shadow-md card-hover animate-fade-in';
+        postElement.innerHTML = `
+          <div class="relative">
+            <img src="${post.imageUrl || 'https://via.placeholder.com/800x400?text=' + encodeURIComponent(post.title)}" 
+                 alt="${post.title}" class="w-full h-56 object-cover">
+            <div class="absolute top-4 left-4 bg-primary-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
+              New
+            </div>
+          </div>
+          <div class="p-6">
+            <div class="flex items-center text-sm text-gray-500 mb-2">
+              <span>${new Date(post.timestamp).toLocaleDateString()}</span>
+              <span class="mx-2">•</span>
+              <span>${Math.ceil(post.content.replace(/<[^>]+>/g, '').length / 200)} min read</span>
+            </div>
+            <h3 class="text-xl font-bold mb-3">${post.title}</h3>
+            <p class="text-gray-600 mb-4">${post.content.replace(/<[^>]+>/g, '').substring(0, 100)}...</p>
+            <a href="posts/post${index}.html" class="text-primary-600 hover:text-primary-800 font-medium inline-flex items-center">
+              Read more
+              <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </a>
+          </div>
+        `;
+        return postElement;
+      }
     }
 
     // Initialize Posts on Page Load
     loadPosts();
+
+    // Newsletter Form Submission
+    const newsletterForm = document.getElementById('newsletter-form');
+    newsletterForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('newsletter-email').value;
+      if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+        alert('Please enter a valid email address');
+        return;
+      }
+
+      try {
+        await addDoc(collection(dbFirestore, 'newsletter_emails'), {
+          email: email,
+          subscribedAt: Date.now()
+        });
+        newsletterForm.reset();
+        alert('Thank you for subscribing!');
+      } catch (error) {
+        alert(`Error: ${error.message}`);
+      }
+    });
 
     // Search Function (Placeholder)
     function searchPosts() {
