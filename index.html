@@ -17,16 +17,13 @@
     .fade-in {
       animation: fadeIn 1s ease-in;
     }
-    .spin-hover:hover {
-      animation: spin 1s linear infinite;
+    .border-highlight:hover {
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.5);
+      transition: box-shadow 0.3s ease;
     }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
     }
     .marquee {
       overflow: hidden;
@@ -68,7 +65,7 @@
   <section class="bg-red-100 py-6">
     <div class="container mx-auto text-center">
       <h2 class="text-2xl font-bold mb-4 fade-in">Join the Muah Feed Fam!</h2>
-      <a href="https://www.youtube.com/channel/UCg9U7NsZ3MQuqgDoHeItUrQ?sub_confirmation=1" target="_blank" class="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full transition spin-hover fade-in">Subscribe on YouTube</a>
+      <a href="https://www.youtube.com/channel/UCg9U7NsZ3MQuqgDoHeItUrQ?sub_confirmation=1" target="_blank" class="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full transition border-highlight fade-in">Subscribe on YouTube</a>
     </div>
   </section>
 
@@ -105,7 +102,7 @@
     </div>
     <!-- Load More Button -->
     <div class="text-center mt-12">
-      <button onclick="loadMorePosts()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full transition spin-hover fade-in">Load More Posts</button>
+      <button onclick="loadMorePosts()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full transition border-highlight fade-in">Load More Posts</button>
     </div>
   </main>
 
