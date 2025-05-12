@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.7/purify.min.js"></script>
   <script>
     tailwind.config = {
       theme: {
@@ -101,9 +102,33 @@
       margin-left: 1.5rem;
       margin-bottom: 1rem;
     }
+    .post-content li {
+      margin-bottom: 0.5rem;
+    }
     .post-content a {
       color: #ef4444;
       text-decoration: underline;
+    }
+    .post-content strong {
+      font-weight: 700;
+    }
+    .post-content em {
+      font-style: italic;
+    }
+    .post-content u {
+      text-decoration: underline;
+    }
+    .post-content strike {
+      text-decoration: line-through;
+    }
+    .post-content .ql-size-small {
+      font-size: 0.75em;
+    }
+    .post-content .ql-size-large {
+      font-size: 1.5em;
+    }
+    .post-content .ql-size-huge {
+      font-size: 2.5em;
     }
   </style>
 </head>
@@ -169,36 +194,13 @@
           <span id="read-time">Loading read time...</span>
         </div>
         <h1 id="post-title" class="text-2xl md:text-3xl font-bold mb-4">Loading title...</h1>
-        
-        <!-- Author Info (if you want to add later) -->
-        <!-- <div class="flex items-center mb-6">
-          <img src="https://via.placeholder.com/40" alt="Author" class="w-10 h-10 rounded-full mr-3">
-          <div>
-            <p class="font-medium">Author Name</p>
-            <p class="text-sm text-gray-500">Posted on <span id="post-date-full">Loading...</span></p>
-          </div>
-        </div> -->
       </div>
 
       <!-- Post Content -->
       <div id="post-content" class="px-6 md:px-8 pb-8 post-content">
         Loading content...
       </div>
-
-      <!-- Tags/Categories (if you want to add later) -->
-      <!-- <div class="px-6 md:px-8 pb-8 flex flex-wrap gap-2">
-        <span class="bg-gray-100 text-gray-800 text-sm px-3 py-1 rounded-full">Tag 1</span>
-        <span class="bg-gray-100 text-gray-800 text-sm px-3 py-1 rounded-full">Tag 2</span>
-      </div> -->
     </article>
-
-    <!-- Related Posts (if you want to add later) -->
-    <!-- <section class="mt-16">
-      <h2 class="text-2xl font-bold mb-6">Related Posts</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        Related posts will be loaded here
-      </div>
-    </section> -->
   </main>
 
   <!-- Footer -->
@@ -267,8 +269,8 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js";
+    import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
 
     // Firebase Configuration
     const firebaseConfig = {
@@ -287,80 +289,84 @@
     const dbRealtime = getDatabase(app);
     const dbFirestore = getFirestore(app);
 
-    // Get post ID from URL
+    // Get post ID and source from URL
     const urlParams = new URLSearchParams(window.location.search);
     const postId = urlParams.get('id');
-    const postSource = urlParams.get('source') || 'realtime'; // Default to realtime if not specified
+    const postSource = urlParams.get('source') || 'firestore'; // Default to firestore
 
     // Load Post Data
     async function loadPost() {
+      console.log(`Loading post: id=${postId}, source=${postSource}`);
       if (!postId) {
+        console.warn('No post ID provided in URL');
         document.getElementById('post-title').textContent = 'Post Not Found';
-        document.getElementById('post-content').textContent = 'The requested post could not be found.';
+        document.getElementById('post-content').textContent = 'The requested post could not be found. Please check the URL.';
         return;
       }
 
       try {
         let postData = null;
-        
+
         if (postSource === 'firestore') {
-          // Load from Firestore
           const docRef = doc(dbFirestore, 'posts', postId);
           const docSnap = await getDoc(docRef);
-          
           if (docSnap.exists()) {
             postData = docSnap.data();
             postData.id = docSnap.id;
             postData.source = 'firestore';
+            console.log('Firestore post found:', postData);
+          } else {
+            console.warn(`Firestore post not found: posts/${postId}`);
           }
         } else {
-          // Load from Realtime Database
           const postRef = ref(dbRealtime, `posts/${postId}`);
           const snapshot = await get(postRef);
-          
           if (snapshot.exists()) {
             postData = snapshot.val();
             postData.id = postId;
             postData.source = 'realtime';
+            console.log('Realtime Database post found:', postData);
+          } else {
+            console.warn(`Realtime Database post not found: posts/${postId}`);
           }
         }
 
         if (!postData) {
-          throw new Error('Post not found');
+          throw new Error(`Post not found: id=${postId}, source=${postSource}`);
         }
 
-        // Display the post
         displayPost(postData);
       } catch (error) {
         console.error('Error loading post:', error);
         document.getElementById('post-title').textContent = 'Error Loading Post';
-        document.getElementById('post-content').textContent = 'There was an error loading the post. Please try again later.';
+        document.getElementById('post-content').innerHTML = `
+          There was an error loading the post. Please try again later.<br>
+          Debug Info: ${error.message}
+        `;
       }
     }
 
     // Display Post Data
     function displayPost(post) {
-      // Set title
+      console.log('Displaying post:', post);
       document.getElementById('post-title').textContent = post.title || 'Untitled Post';
       document.title = `${post.title || 'Post'} | Muah Feed`;
 
-      // Set date and read time
       const postDate = post.timestamp ? new Date(post.timestamp) : new Date();
       document.getElementById('post-date').textContent = postDate.toLocaleDateString();
-      
+
       const contentText = post.content ? post.content.replace(/<[^>]+>/g, '') : '';
-      const readTime = Math.ceil(contentText.length / 200);
+      const readTime = Math.ceil(contentText.length / 200) || 1;
       document.getElementById('read-time').textContent = `${readTime} min read`;
 
-      // Set content
       const postContent = document.getElementById('post-content');
-      postContent.innerHTML = post.content || '<p>No content available.</p>';
+      postContent.innerHTML = DOMPurify.sanitize(post.content || '<p>No content available.</p>', {
+        ADD_TAGS: ['iframe'],
+        ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling']
+      });
 
-      // Set media (image or YouTube video)
       const mediaContainer = document.getElementById('post-media');
-      
       if (post.youtube) {
-        // Extract YouTube video ID from URL
         const youtubeId = extractYouTubeId(post.youtube);
         if (youtubeId) {
           mediaContainer.innerHTML = `
@@ -373,13 +379,11 @@
             </div>
           `;
         } else {
-          // Fallback to image if YouTube URL is invalid
           createImageMedia(post, mediaContainer);
         }
       } else if (post.imageUrl) {
         createImageMedia(post, mediaContainer);
       } else {
-        // No media - hide the container
         mediaContainer.style.display = 'none';
       }
     }
@@ -398,67 +402,54 @@
       return (match && match[2].length === 11) ? match[2] : null;
     }
 
-    // Initialize the page
-    document.addEventListener('DOMContentLoaded', () => {
-      loadPost();
-      
-      // Initialize search functionality (similar to index.html)
-      const searchInput = document.getElementById('search');
-      const searchResults = document.getElementById('search-results');
-      
-      searchInput.addEventListener('input', debounce(() => {
-        updateSearchResults(searchInput.value);
-      }, 300));
-      
-      document.addEventListener('click', (e) => {
-        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
-          searchResults.classList.add('hidden');
-        }
-      });
-      
-      searchInput.addEventListener('focus', () => {
-        if (searchInput.value.trim()) {
-          updateSearchResults(searchInput.value);
-        }
-      });
-    });
-
-    // Debounce function
-    function debounce(func, wait) {
-      let timeout;
-      return function (...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), wait);
-      };
-    }
-
-    // Search functionality (similar to index.html)
+    // Search Functionality
     async function updateSearchResults(query) {
       query = query.trim().toLowerCase();
       const searchResults = document.getElementById('search-results');
       searchResults.innerHTML = '';
-      
       if (!query) {
         searchResults.classList.add('hidden');
         return;
       }
 
       try {
-        // Get posts from both Realtime DB and Firestore
+        const allPosts = [];
+
+        // Realtime Database
         const realtimeRef = ref(dbRealtime, 'posts');
         const realtimeSnapshot = await get(realtimeRef);
-        const realtimePosts = [];
-        
         if (realtimeSnapshot.exists()) {
           realtimeSnapshot.forEach((childSnapshot) => {
-            realtimePosts.push({ id: childSnapshot.key, source: 'realtime', ...childSnapshot.val() });
+            allPosts.push({ id: childSnapshot.key, source: 'realtime', ...childSnapshot.val() });
           });
         }
+        console.log('Realtime Database search posts:', allPosts);
 
-        // Note: In a real app, you'd also query Firestore here like in index.html
-        // For simplicity, we're just using the realtime posts in this example
+        // Firestore
+        const firestoreSnapshot = await getDocs(collection(dbFirestore, 'posts'));
+        firestoreSnapshot.forEach((doc) => {
+          allPosts.push({ id: doc.id, source: 'firestore', ...doc.data() });
+        });
+        console.log('Firestore search posts:', allPosts);
 
-        const filteredPosts = realtimePosts
+        // Deduplicate by id, prefer newer timestamp
+        const uniquePosts = [];
+        const seenIds = new Set();
+        allPosts.forEach(post => {
+          if (seenIds.has(post.id)) {
+            const existing = uniquePosts.find(p => p.id === post.id);
+            if ((post.timestamp || 0) > (existing.timestamp || 0)) {
+              uniquePosts[uniquePosts.indexOf(existing)] = post;
+            }
+          } else {
+            uniquePosts.push(post);
+            seenIds.add(post.id);
+          }
+        });
+
+        console.log('Unique search posts:', uniquePosts);
+
+        const filteredPosts = uniquePosts
           .filter(post => post.title?.toLowerCase().includes(query))
           .slice(0, 5);
 
@@ -492,11 +483,71 @@
         console.error('Search error:', error);
         searchResults.innerHTML = `
           <div class="p-4 text-gray-600 text-center">
-            Error performing search
+            Error performing search: ${error.message}
           </div>
         `;
         searchResults.classList.remove('hidden');
       }
+    }
+
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM loaded for see.html');
+      loadPost();
+
+      const searchInput = document.getElementById('search');
+      const searchResults = document.getElementById('search-results');
+
+      searchInput.addEventListener('input', debounce(() => {
+        updateSearchResults(searchInput.value);
+      }, 300));
+
+      document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+          searchResults.classList.add('hidden');
+        }
+      });
+
+      searchInput.addEventListener('focus', () => {
+        if (searchInput.value.trim()) {
+          updateSearchResults(searchInput.value);
+        }
+      });
+
+      searchInput.addEventListener('keydown', (e) => {
+        const items = searchResults.querySelectorAll('.search-result-item');
+        if (!items.length) return;
+
+        let currentIndex = Array.from(items).findIndex(item => item.classList.contains('bg-primary-100'));
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (currentIndex < items.length - 1) {
+            if (currentIndex >= 0) items[currentIndex].classList.remove('bg-primary-100');
+            items[currentIndex + 1].classList.add('bg-primary-100');
+            items[currentIndex + 1].focus();
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (currentIndex > 0) {
+            items[currentIndex].classList.remove('bg-primary-100');
+            items[currentIndex - 1].classList.add('bg-primary-100');
+            items[currentIndex - 1].focus();
+          }
+        } else if (e.key === 'Enter' && currentIndex >= 0) {
+          e.preventDefault();
+          items[currentIndex].click();
+        }
+      });
+    });
+
+    // Debounce function
+    function debounce(func, wait) {
+      let timeout;
+      return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+      };
     }
   </script>
 </body>
