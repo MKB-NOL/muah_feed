@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Muah Feed - Read the latest post">
   <title>Muah Feed | Post</title>
-  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="icon" type="image/png" href="../favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -104,7 +104,7 @@
   <header class="sticky top-0 z-50 bg-white shadow-sm">
     <div class="container mx-auto px-4 py-4">
       <div class="flex justify-between items-center">
-        <a href="/" class="flex items-center">
+        <a href="../index.html" class="flex items-center">
           <h1 class="text-2xl font-bold gradient-text">Muah Feed</h1>
         </a>
         <div class="flex items-center space-x-4">
@@ -119,7 +119,7 @@
             </button>
             <div id="search-results" class="hidden absolute w-full md:w-96 bg-white border border-gray-300 rounded-lg shadow-lg mt-2"></div>
           </div>
-          <a href="post.html" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-4 py-2 rounded-lg transition duration-300 border-highlight">
+          <a href="../post.html" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-4 py-2 rounded-lg transition duration-300 border-highlight">
             Post
           </a>
         </div>
@@ -157,7 +157,7 @@
         <div>
           <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
           <ul class="space-y-2">
-            <li><a href="/" class="text-gray-400 hover:text-white transition">Home</a></li>
+            <li><a href="../index.html" class="text-gray-400 hover:text-white transition">Home</a></li>
             <li><a href="#" class="text-gray-400 hover:text-white transition">Posts</a></li>
             <li><a href="#" class="text-gray-400 hover:text-white transition">News</a></li>
             <li><a href="#" class="text-gray-400 hover:text-white transition">About</a></li>
@@ -245,6 +245,9 @@
           posts.push({ id: childSnapshot.key, source: 'realtime', ...childSnapshot.val() });
         });
         updatePosts(posts);
+      }, (error) => {
+        console.error('Error fetching Realtime Database posts:', error);
+        renderError();
       });
 
       // Firestore Posts
@@ -255,6 +258,9 @@
           posts.push({ id: doc.id, source: 'firestore', ...doc.data() });
         });
         updatePosts(posts);
+      }, (error) => {
+        console.error('Error fetching Firestore posts:', error);
+        renderError();
       });
 
       function updatePosts(newPosts) {
@@ -264,47 +270,97 @@
       }
 
       function renderPost() {
+        const postContent = document.getElementById('post-content');
+        if (!postContent) {
+          console.error('Post content element not found');
+          return;
+        }
+
         const post = allPosts[postIndex - 1]; // 0-based index
         if (!post) {
-          document.getElementById('post-content').innerHTML = `
+          postContent.innerHTML = `
             <div class="text-center py-12">
               <h2 class="text-2xl font-bold text-gray-800 mb-4">Post Not Found</h2>
               <p class="text-gray-600">The requested post does not exist.</p>
-              <a href="/" class="mt-6 inline-block bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-300">Back to Home</a>
+              <a href="../index.html" class="mt-6 inline-block bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-300">Back to Home</a>
             </div>
           `;
           return;
         }
 
         // Update Title
-        document.getElementById('post-title').textContent = post.title;
+        const postTitle = document.getElementById('post-title');
+        if (postTitle) {
+          postTitle.textContent = post.title || 'Untitled Post';
+        } else {
+          console.error('Post title element not found');
+        }
 
         // Update Image
-        const postImage = document.getElementById('post-image').querySelector('img');
-        postImage.src = post.imageUrl || 'https://via.placeholder.com/800x400?text=' + encodeURIComponent(post.title);
-        postImage.alt = post.title;
+        const postImage = document.getElementById('post-image')?.querySelector('img');
+        if (postImage) {
+          postImage.src = post.imageUrl || 'https://via.placeholder.com/800x400?text=' + encodeURIComponent(post.title || 'No Title');
+          postImage.alt = post.title || 'Post image';
+        } else {
+          console.error('Post image element not found');
+        }
 
         // Update Date and Read Time
-        document.getElementById('post-date').textContent = new Date(post.timestamp).toLocaleDateString();
-        document.getElementById('post-read-time').textContent = `${Math.ceil(post.content.replace(/<[^>]+>/g, '').length / 200)} min read`;
+        const postDate = document.getElementById('post-date');
+        if (postDate) {
+          postDate.textContent = post.timestamp ? new Date(post.timestamp).toLocaleDateString() : 'Unknown Date';
+        } else {
+          console.error('Post date element not found');
+        }
+
+        const postReadTime = document.getElementById('post-read-time');
+        if (postReadTime) {
+          postReadTime.textContent = post.content ? `${Math.ceil(post.content.replace(/<[^>]+>/g, '').length / 200)} min read` : '0 min read';
+        } else {
+          console.error('Post read time element not found');
+        }
 
         // Update YouTube Video
         const youtubeContainer = document.getElementById('post-youtube');
-        if (post.youtube && post.youtube.includes('youtube.com')) {
-          const videoId = post.youtube.match(/(?:v=)([^&]+)/)?.[1] || post.youtube.match(/youtu\.be\/([^?]+)/)?.[1];
-          if (videoId) {
-            youtubeContainer.querySelector('iframe').src = `https://www.youtube.com/embed/${videoId}`;
-            youtubeContainer.classList.remove('hidden');
+        if (youtubeContainer) {
+          if (post.youtube && post.youtube.includes('youtube.com')) {
+            const videoId = post.youtube.match(/(?:v=)([^&]+)/)?.[1] || post.youtube.match(/youtu\.be\/([^?]+)/)?.[1];
+            if (videoId) {
+              youtubeContainer.querySelector('iframe').src = `https://www.youtube.com/embed/${videoId}`;
+              youtubeContainer.classList.remove('hidden');
+            }
           }
+        } else {
+          console.error('YouTube container element not found');
         }
 
         // Update Content
-        document.getElementById('post-text').innerHTML = post.content;
+        const postText = document.getElementById('post-text');
+        if (postText) {
+          postText.innerHTML = post.content || '<p>No content available.</p>';
+        } else {
+          console.error('Post text element not found');
+        }
+      }
+
+      function renderError() {
+        const postContent = document.getElementById('post-content');
+        if (postContent) {
+          postContent.innerHTML = `
+            <div class="text-center py-12">
+              <h2 class="text-2xl font-bold text-gray-800 mb-4">Error Loading Post</h2>
+              <p class="text-gray-600">There was an issue fetching the post. Please try again later.</p>
+              <a href="../index.html" class="mt-6 inline-block bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-300">Back to Home</a>
+            </div>
+          `;
+        }
       }
     }
 
-    // Initialize Post on Page Load
-    loadPost();
+    // Initialize Post on DOM Load
+    document.addEventListener('DOMContentLoaded', () => {
+      loadPost();
+    });
 
     // Search Functionality (Copied from index.html for consistency)
     const searchInput = document.getElementById('search');
@@ -327,6 +383,8 @@
           posts.push({ id: childSnapshot.key, source: 'realtime', ...childSnapshot.val() });
         });
         updateSearchPosts(posts);
+      }, (error) => {
+        console.error('Error fetching Realtime Database posts for search:', error);
       });
 
       const postsRefFirestore = collection(dbFirestore, 'posts');
@@ -336,6 +394,8 @@
           posts.push({ id: doc.id, source: 'firestore', ...doc.data() });
         });
         updateSearchPosts(posts);
+      }, (error) => {
+        console.error('Error fetching Firestore posts for search:', error);
       });
     }
 
@@ -354,7 +414,7 @@
       }
 
       const filteredPosts = allPosts
-        .filter(post => post.title.toLowerCase().includes(query))
+        .filter(post => post.title?.toLowerCase().includes(query))
         .slice(0, 5);
 
       if (filteredPosts.length === 0) {
@@ -369,14 +429,14 @@
 
       filteredPosts.forEach((post, index) => {
         const resultItem = document.createElement('a');
-        resultItem.href = `posts/post${allPosts.indexOf(post) + 1}.html`;
+        resultItem.href = `post${allPosts.indexOf(post) + 1}.html`;
         resultItem.className = 'search-result-item flex items-center p-3 border-b border-gray-200 last:border-b-0';
         resultItem.innerHTML = `
-          <img src="${post.imageUrl || 'https://via.placeholder.com/50x50?text=' + encodeURIComponent(post.title)}" 
-               alt="${post.title}" class="w-12 h-12 object-cover rounded-md mr-3">
+          <img src="${post.imageUrl || 'https://via.placeholder.com/50x50?text=' + encodeURIComponent(post.title || 'No Title')}" 
+               alt="${post.title || 'Post'}" class="w-12 h-12 object-cover rounded-md mr-3">
           <div class="flex-1">
-            <h4 class="text-sm font-semibold text-gray-800">${post.title}</h4>
-            <p class="text-xs text-gray-600 truncate">${post.content.replace(/<[^>]+>/g, '').substring(0, 50)}...</p>
+            <h4 class="text-sm font-semibold text-gray-800">${post.title || 'Untitled'}</h4>
+            <p class="text-xs text-gray-600 truncate">${(post.content || '').replace(/<[^>]+>/g, '').substring(0, 50)}...</p>
           </div>
         `;
         searchResults.appendChild(resultItem);
@@ -428,7 +488,9 @@
     });
 
     // Initialize Search Posts
-    loadSearchPosts();
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSearchPosts();
+    });
 
     // Smooth Scrolling for Anchor Links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
