@@ -69,15 +69,32 @@
       box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.5);
       transition: box-shadow 0.3s ease;
     }
+    .post-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .post-media img {
+      width: 100%;
+      max-height: 400px;
+      object-fit: cover;
+      border-radius: 0.5rem;
+    }
+    .post-media iframe {
+      width: 100%;
+      max-height: 400px;
+      aspect-ratio: 16 / 9;
+      border-radius: 0.5rem;
+    }
+    .post-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
     .post-content img {
       max-width: 100%;
       height: auto;
-      border-radius: 0.5rem;
-      margin: 1rem 0;
-    }
-    .post-content iframe {
-      width: 100%;
-      min-height: 400px;
       border-radius: 0.5rem;
       margin: 1rem 0;
     }
@@ -130,6 +147,19 @@
     .post-content .ql-size-huge {
       font-size: 2.5em;
     }
+    @media (min-width: 768px) {
+      .post-container {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      .post-media {
+        flex: 1;
+        min-width: 300px;
+      }
+      .post-content {
+        flex: 2;
+      }
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
@@ -180,25 +210,23 @@
     </div>
 
     <!-- Post Content -->
-    <article class="bg-white rounded-xl shadow-md overflow-hidden animate-fade-in">
-      <!-- Post Image or YouTube Video -->
-      <div id="post-media" class="relative">
+    <article class="bg-white rounded-xl shadow-md overflow-hidden animate-fade-in post-container">
+      <!-- Post Media -->
+      <div id="post-media" class="post-media">
         <!-- Will be filled by JavaScript -->
       </div>
 
-      <!-- Post Header -->
-      <div class="p-6 md:p-8">
+      <!-- Post Header and Content -->
+      <div class="p-6 md:p-8 post-content">
         <div class="flex items-center text-sm text-gray-500 mb-4">
           <span id="post-date">Loading date...</span>
           <span class="mx-2">•</span>
           <span id="read-time">Loading read time...</span>
         </div>
         <h1 id="post-title" class="text-2xl md:text-3xl font-bold mb-4">Loading title...</h1>
-      </div>
-
-      <!-- Post Content -->
-      <div id="post-content" class="px-6 md:px-8 pb-8 post-content">
-        Loading content...
+        <div id="post-content" class="post-content">
+          Loading content...
+        </div>
       </div>
     </article>
   </main>
@@ -370,13 +398,11 @@
         const youtubeId = extractYouTubeId(post.youtube);
         if (youtubeId) {
           mediaContainer.innerHTML = `
-            <div class="aspect-w-16 aspect-h-9">
-              <iframe src="https://www.youtube.com/embed/${youtubeId}" 
-                      frameborder="0" 
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                      allowfullscreen
-                      class="w-full h-96"></iframe>
-            </div>
+            <iframe src="https://www.youtube.com/embed/${youtubeId}" 
+                    frameborder="0" 
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen
+                    class="w-full"></iframe>
           `;
         } else {
           createImageMedia(post, mediaContainer);
@@ -392,7 +418,7 @@
       container.innerHTML = `
         <img src="${post.imageUrl || 'https://via.placeholder.com/800x400?text=' + encodeURIComponent(post.title || 'No Image')}" 
              alt="${post.title || 'Post Image'}" 
-             class="w-full h-96 object-cover">
+             class="w-full">
       `;
     }
 
