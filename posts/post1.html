@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Muah Feed - Read the latest post">
   <title>Muah Feed | Post</title>
-  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="icon" type="image/png" href="../favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -104,7 +104,7 @@
   <header class="sticky top-0 z-50 bg-white shadow-sm">
     <div class="container mx-auto px-4 py-4">
       <div class="flex justify-between items-center">
-        <a href="index.html" class="flex items-center">
+        <a href="../index.html" class="flex items-center">
           <h1 class="text-2xl font-bold gradient-text">Muah Feed</h1>
         </a>
         <div class="flex items-center space-x-4">
@@ -119,7 +119,7 @@
             </button>
             <div id="search-results" class="hidden absolute w-full md:w-96 bg-white border border-gray-300 rounded-lg shadow-lg mt-2"></div>
           </div>
-          <a href="post.html" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-4 py-2 rounded-lg transition duration-300 border-highlight">
+          <a href="../post.html" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-4 py-2 rounded-lg transition duration-300 border-highlight">
             Post
           </a>
         </div>
@@ -144,8 +144,8 @@
       </div>
       <div id="post-text" class="post-content prose prose-lg max-w-none text-gray-700 animate-fade-in"></div>
       <nav class="flex justify-between mt-8">
-        <a id="prev-post" href="#" class="text-primary-600 hover:text-primary-800 font-medium">Previous Post</a>
-        <a id="next-post" href="#" class="text-primary-600 hover:text-primary-800 font-medium">Next Post</a>
+        <a id="prev-post" href="#" class="text-primary-600 hover:text-primary-800 font-medium pointer-events-none text-gray-400">Previous Post</a>
+        <a id="next-post" href="post2.html" class="text-primary-600 hover:text-primary-800 font-medium">Next Post</a>
       </nav>
     </article>
   </main>
@@ -161,7 +161,7 @@
         <div>
           <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
           <ul class="space-y-2">
-            <li><a href="index.html" class="text-gray-400 hover:text-white transition">Home</a></li>
+            <li><a href="../index.html" class="text-gray-400 hover:text-white transition">Home</a></li>
             <li><a href="#" class="text-gray-400 hover:text-white transition">Posts</a></li>
             <li><a href="#" class="text-gray-400 hover:text-white transition">News</a></li>
             <li><a href="#" class="text-gray-400 hover:text-white transition">About</a></li>
@@ -236,25 +236,33 @@
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
     const dbRealtime = getDatabase(app);
+    FIRESTORE DATABASE
     const dbFirestore = getFirestore(app);
 
     // Load Post
     function loadPost() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const postIndex = parseInt(urlParams.get('index')) || 1; // Default to 1 if invalid
+      const postIndex = 1; // Hardcoded for post1.html (newest post)
       let allPosts = [];
+      let realtimeFetched = false;
+      let firestoreFetched = false;
 
       // Realtime Database Posts
       const postsRefRealtime = ref(dbRealtime, 'posts');
       onValue(postsRefRealtime, (snapshot) => {
         const posts = [];
         snapshot.forEach((childSnapshot) => {
-          posts.push({ id: childSnapshot.key, source: 'realtime', ...childSnapshot.val() });
+          const postData = childSnapshot.val();
+          posts.push({ id: childSnapshot.key, source: 'realtime', ...postData });
         });
-        updatePosts(posts);
+        console.log('Realtime Database posts:', posts);
+        console.log('Realtime Database snapshot exists:', snapshot.exists());
+        console.log('Realtime Database post count:', posts.length);
+        realtimeFetched = true;
+        updatePosts(posts, 'realtime');
       }, (error) => {
         console.error('Error fetching Realtime Database posts:', error);
-        renderError();
+        realtimeFetched = true;
+        renderError(`Failed to fetch Realtime Database posts: ${error.message}`);
       });
 
       // Firestore Posts
@@ -262,38 +270,86 @@
       onSnapshot(postsRefFirestore, (snapshot) => {
         const posts = [];
         snapshot.forEach((doc) => {
-          posts.push({ id: doc.id, source: 'firestore', ...doc.data() });
+          const postData = doc.data();
+          posts.push({ id: doc.id, source: 'firestore', ...postData });
         });
-        updatePosts(posts);
+        console.log('Firestore posts:', posts);
+        console.log('Firestore snapshot empty:', snapshot.empty);
+        console.log('Firestore post count:', posts.length);
+        firestoreFetched = true;
+        updatePosts(posts, 'firestore');
       }, (error) => {
         console.error('Error fetching Firestore posts:', error);
-        renderError();
+        firestoreFetched = true;
+        renderError(`Failed to fetch Firestore posts: ${error.message}`);
       });
 
-      function updatePosts(newPosts) {
-        allPosts = [...allPosts.filter(p => !newPosts.some(np => np.id === p.id && np.source === p.source)), ...newPosts];
-        allPosts.sort((a, b) => b.timestamp - a.timestamp); // Sort by timestamp descending
-        renderPost(postIndex, allPosts);
+      function updatePosts(newPosts, source) {
+        // Deduplicate by id, prefer newer timestamp
+        newPosts.forEach(newPost => {
+          const existingIndex = allPosts.findIndex(p => p.id === newPost.id);
+          if (existingIndex >= 0) {
+            const existingPost = allPosts[existingIndex];
+            if ((newPost.timestamp || 0) > (existingPost.timestamp || 0)) {
+              allPosts[existingIndex] = newPost;
+            }
+          } else {
+            allPosts.push(newPost);
+          }
+        });
+
+        console.log(`Posts after ${source} update:`, allPosts);
+        console.log(`Total post count:`, allPosts.length);
+
+        // Sort only after both sources are fetched or failed
+        if (realtimeFetched && firestoreFetched) {
+          allPosts.sort((a, b) => {
+            const timeA = a.timestamp || 0;
+            const timeB = b.timestamp || 0;
+            return timeB - timeA; // Sort descending
+          });
+          console.log('All sorted posts:', allPosts);
+          console.log('Post at index 1:', allPosts[postIndex - 1]);
+          renderPost(postIndex, allPosts);
+        }
       }
 
       function renderPost(index, posts) {
         const postContent = document.getElementById('post-content');
         if (!postContent) {
           console.error('Post content element not found');
+          renderError('Internal error: Post content element missing');
+          return;
+        }
+
+        if (posts.length === 0) {
+          console.warn('No posts available in database');
+          postContent.innerHTML = `
+            <div class="text-center py-12">
+              <h2 class="text-2xl font-bold text-gray-800 mb-4">No Posts Available</h2>
+              <p class="text-gray-600">No posts were found in the database. Please check your Firebase setup.</p>
+              <p class="text-gray-600 mt-2">Debug Info: No data in Realtime Database or Firestore.</p>
+              <a href="../index.html" class="mt-6 inline-block bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-300">Back to Home</a>
+            </div>
+          `;
           return;
         }
 
         const post = posts[index - 1]; // 0-based index
         if (!post) {
+          console.warn(`Post at index ${index} not found`);
           postContent.innerHTML = `
             <div class="text-center py-12">
               <h2 class="text-2xl font-bold text-gray-800 mb-4">Post Not Found</h2>
               <p class="text-gray-600">The requested post does not exist.</p>
-              <a href="index.html" class="mt-6 inline-block bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-300">Back to Home</a>
+              <p class="text-gray-600 mt-2">Debug Info: Requested index ${index}, but only ${posts.length} posts available.</p>
+              <a href="../index.html" class="mt-6 inline-block bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-300">Back to Home</a>
             </div>
           `;
           return;
         }
+
+        console.log(`Rendering post ${index}:`, post);
 
         // Update Title
         const postTitle = document.getElementById('post-title');
@@ -354,14 +410,11 @@
         const nextPostLink = document.getElementById('next-post');
         if (prevPostLink && nextPostLink) {
           if (index > 1) {
-            prevPostLink.href = `post.html?index=${index - 1}`;
+            prevPostLink.href = `post${index - 1}.html`;
             prevPostLink.classList.remove('pointer-events-none', 'text-gray-400');
-          } else {
-            prevPostLink.href = '#';
-            prevPostLink.classList.add('pointer-events-none', 'text-gray-400');
           }
           if (index < posts.length) {
-            nextPostLink.href = `post.html?index=${index + 1}`;
+            nextPostLink.href = `post${index + 1}.html`;
             nextPostLink.classList.remove('pointer-events-none', 'text-gray-400');
           } else {
             nextPostLink.href = '#';
@@ -370,14 +423,15 @@
         }
       }
 
-      function renderError() {
+      function renderError(message) {
         const postContent = document.getElementById('post-content');
         if (postContent) {
           postContent.innerHTML = `
             <div class="text-center py-12">
               <h2 class="text-2xl font-bold text-gray-800 mb-4">Error Loading Post</h2>
               <p class="text-gray-600">There was an issue fetching the post. Please try again later.</p>
-              <a href="index.html" class="mt-6 inline-block bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-300">Back to Home</a>
+              <p class="text-gray-600 mt-2">Debug Info: ${message}</p>
+              <a href="../index.html" class="mt-6 inline-block bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-300">Back to Home</a>
             </div>
           `;
         }
@@ -386,6 +440,7 @@
 
     // Initialize Post on DOM Load
     document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM loaded for post1.html');
       loadPost();
     });
 
@@ -403,15 +458,21 @@
     }
 
     function loadSearchPosts() {
+      let realtimeFetched = false;
+      let firestoreFetched = false;
+
       const postsRefRealtime = ref(dbRealtime, 'posts');
       onValue(postsRefRealtime, (snapshot) => {
         const posts = [];
         snapshot.forEach((childSnapshot) => {
           posts.push({ id: childSnapshot.key, source: 'realtime', ...childSnapshot.val() });
         });
-        updateSearchPosts(posts);
+        console.log('Realtime Database posts for search:', posts);
+        realtimeFetched = true;
+        updateSearchPosts(posts, 'realtime');
       }, (error) => {
         console.error('Error fetching Realtime Database posts for search:', error);
+        realtimeFetched = true;
       });
 
       const postsRefFirestore = collection(dbFirestore, 'posts');
@@ -420,16 +481,33 @@
         snapshot.forEach((doc) => {
           posts.push({ id: doc.id, source: 'firestore', ...doc.data() });
         });
-        updateSearchPosts(posts);
+        console.log('Firestore posts for search:', posts);
+        firestoreFetched = true;
+        updateSearchPosts(posts, 'firestore');
       }, (error) => {
         console.error('Error fetching Firestore posts for search:', error);
+        firestoreFetched = true;
       });
-    }
 
-    function updateSearchPosts(newPosts) {
-      allPosts = [...allPosts.filter(p => !newPosts.some(np => np.id === p.id && np.source === p.source)), ...newPosts];
-      allPosts.sort((a, b) => b.timestamp - a.timestamp);
-      updateSearchResults(searchInput.value);
+      function updateSearchPosts(newPosts, source) {
+        newPosts.forEach(newPost => {
+          const existingIndex = allPosts.findIndex(p => p.id === newPost.id);
+          if (existingIndex >= 0) {
+            const existingPost = allPosts[existingIndex];
+            if ((newPost.timestamp || 0) > (existingPost.timestamp || 0)) {
+              allPosts[existingIndex] = newPost;
+            }
+          } else {
+            allPosts.push(newPost);
+          }
+        });
+
+        if (realtimeFetched && firestoreFetched) {
+          allPosts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+          console.log('Search posts sorted:', allPosts);
+          updateSearchResults(searchInput.value);
+        }
+      }
     }
 
     function updateSearchResults(query) {
@@ -456,7 +534,7 @@
 
       filteredPosts.forEach((post, index) => {
         const resultItem = document.createElement('a');
-        resultItem.href = `post.html?index=${allPosts.indexOf(post) + 1}`;
+        resultItem.href = `post${allPosts.indexOf(post) + 1}.html`;
         resultItem.className = 'search-result-item flex items-center p-3 border-b border-gray-200 last:border-b-0';
         resultItem.innerHTML = `
           <img src="${post.imageUrl || 'https://via.placeholder.com/50x50?text=' + encodeURIComponent(post.title || 'No Title')}" 
