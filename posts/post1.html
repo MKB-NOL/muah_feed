@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Muah Feed Post">
-  <title>Muah Feed Post</title>
-  <link rel="icon" type="image/png" href="../favicon.png">
+  <meta name="description" content="Muah Feed - Read the latest post">
+  <title>Muah Feed | Post</title>
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -50,6 +50,13 @@
     }
   </script>
   <style>
+    .card-hover {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    }
     .marquee-container {
       overflow: hidden;
       white-space: nowrap;
@@ -71,13 +78,17 @@
     .post-content img {
       max-width: 100%;
       height: auto;
-      margin: 1rem 0;
+      border-radius: 8px;
     }
-    .post-content img[style*="float: left"] {
-      margin-right: 1rem;
+    .post-content p {
+      margin-bottom: 1rem;
     }
-    .post-content img[style*="float: right"] {
-      margin-left: 1rem;
+    .post-content h1, .post-content h2, .post-content h3 {
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .search-result-item:hover {
+      background-color: #fef2f2;
     }
   </style>
 </head>
@@ -93,17 +104,24 @@
   <header class="sticky top-0 z-50 bg-white shadow-sm">
     <div class="container mx-auto px-4 py-4">
       <div class="flex justify-between items-center">
-        <a href="../index.html" class="flex items-center">
+        <a href="/" class="flex items-center">
           <h1 class="text-2xl font-bold gradient-text">Muah Feed</h1>
         </a>
-        <div class="relative w-full md:w-auto">
-          <input type="text" id="search" placeholder="Search posts..." 
-                 class="w-full md:w-64 pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-          <button onclick="searchPosts()" class="absolute right-3 top-2 text-gray-400 hover:text-primary-600">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-          </button>
+        <div class="flex items-center space-x-4">
+          <div class="relative">
+            <input type="text" id="search" placeholder="Search posts..." 
+                   class="w-full md:w-64 pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                   aria-autocomplete="list" aria-controls="search-results" autocomplete="off">
+            <button class="absolute right-3 top-2 text-gray-400 hover:text-primary-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </button>
+            <div id="search-results" class="hidden absolute w-full md:w-96 bg-white border border-gray-300 rounded-lg shadow-lg mt-2"></div>
+          </div>
+          <a href="post.html" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-4 py-2 rounded-lg transition duration-300 border-highlight">
+            Post
+          </a>
         </div>
       </div>
     </div>
@@ -111,16 +129,20 @@
 
   <!-- Main Content -->
   <main class="container mx-auto px-4 py-12">
-    <article id="post-content" class="bg-white rounded-xl shadow-md p-8 max-w-3xl mx-auto animate-fade-in">
-      <h1 id="post-title" class="text-4xl font-bold mb-6">Loading...</h1>
-      <img id="post-image" src="https://via.placeholder.com/800x400" alt="Post Image" class="w-full h-96 object-cover rounded-lg mb-6">
-      <div id="post-text" class="text-gray-600 mb-4 post-content">Loading content...</div>
-      <div id="youtube-embed" class="mb-4"></div>
-      <p class="text-gray-600 mb-4">Want more? Check out our YouTube channel for the full scoop!</p>
-      <a href="https://www.youtube.com/channel/UCg9U7NsZ3MQuqgDoHeItUrQ?sub_confirmation=1" target="_blank" 
-         class="inline-block bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300 border-highlight">
-        Watch on YouTube
-      </a>
+    <article id="post-content" class="bg-white rounded-xl shadow-md p-8 mb-16">
+      <div id="post-image" class="mb-6">
+        <img src="https://via.placeholder.com/800x400" alt="Post image" class="w-full h-96 object-cover rounded-lg">
+      </div>
+      <h1 id="post-title" class="text-3xl md:text-4xl font-bold mb-4 animate-fade-in">Loading...</h1>
+      <div class="flex items-center text-sm text-gray-500 mb-6 animate-fade-in">
+        <span id="post-date">Date</span>
+        <span class="mx-2">•</span>
+        <span id="post-read-time">0 min read</span>
+      </div>
+      <div id="post-youtube" class="mb-6 hidden">
+        <iframe class="w-full h-64 md:h-96 rounded-lg" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+      <div id="post-text" class="post-content prose prose-lg max-w-none text-gray-700 animate-fade-in"></div>
     </article>
   </main>
 
@@ -135,8 +157,8 @@
         <div>
           <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
           <ul class="space-y-2">
-            <li><a href="../index.html" class="text-gray-400 hover:text-white transition">Home</a></li>
-            <li><a href="#" class="text-gray-400 hover:text-white transition">Videos</a></li>
+            <li><a href="/" class="text-gray-400 hover:text-white transition">Home</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white transition">Posts</a></li>
             <li><a href="#" class="text-gray-400 hover:text-white transition">News</a></li>
             <li><a href="#" class="text-gray-400 hover:text-white transition">About</a></li>
           </ul>
@@ -190,7 +212,8 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
-    import { getDatabase, ref, onValue, limitToLast } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
 
     // Firebase Configuration
     const firebaseConfig = {
@@ -206,57 +229,216 @@
 
     // Initialize Firebase
     const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
+    const dbRealtime = getDatabase(app);
+    const dbFirestore = getFirestore(app);
 
-    // Load Post Content
+    // Load Post
     function loadPost() {
-      const postTitle = document.getElementById('post-title');
-      const postImage = document.getElementById('post-image');
-      const postText = document.getElementById('post-text');
-      const youtubeEmbed = document.getElementById('youtube-embed');
+      const postIndex = 1; // For post1.html (newest post)
+      let allPosts = [];
 
-      const postsRef = ref(database, 'posts');
-      onValue(limitToLast(3)(postsRef), (snapshot) => {
+      // Realtime Database Posts
+      const postsRefRealtime = ref(dbRealtime, 'posts');
+      onValue(postsRefRealtime, (snapshot) => {
         const posts = [];
         snapshot.forEach((childSnapshot) => {
-          posts.push(childSnapshot.val());
+          posts.push({ id: childSnapshot.key, source: 'realtime', ...childSnapshot.val() });
         });
-        if (posts.length > 0) {
-          const post = posts[posts.length - 1]; // Latest post
-          postTitle.textContent = post.title;
-          postImage.src = post.imageUrl || `https://via.placeholder.com/800x400?text=${encodeURIComponent(post.title)}`;
-          postText.innerHTML = post.content;
-          if (post.youtube) {
-            const videoId = post.youtube.match(/(?:https?:\/\/)?(?:www\.)?youtube\.com\/watch\?v=([^&]+)/)?.[1] || 
-                            post.youtube.match(/(?:https?:\/\/)?youtu\.be\/([^?]+)/)?.[1];
-            if (videoId) {
-              youtubeEmbed.innerHTML = `
-                <div class="aspect-w-16 aspect-h-9">
-                  <iframe class="w-full h-96" src="https://www.youtube.com/embed/${videoId}" 
-                          frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                </div>
-              `;
-            }
-          }
-        } else {
-          postTitle.textContent = 'No Post Available';
-          postText.textContent = 'Check back later for new content!';
-        }
+        updatePosts(posts);
       });
+
+      // Firestore Posts
+      const postsRefFirestore = collection(dbFirestore, 'posts');
+      onSnapshot(postsRefFirestore, (snapshot) => {
+        const posts = [];
+        snapshot.forEach((doc) => {
+          posts.push({ id: doc.id, source: 'firestore', ...doc.data() });
+        });
+        updatePosts(posts);
+      });
+
+      function updatePosts(newPosts) {
+        allPosts = [...allPosts.filter(p => !newPosts.some(np => np.id === p.id && np.source === p.source)), ...newPosts];
+        allPosts.sort((a, b) => b.timestamp - a.timestamp); // Sort by timestamp descending
+        renderPost();
+      }
+
+      function renderPost() {
+        const post = allPosts[postIndex - 1]; // 0-based index
+        if (!post) {
+          document.getElementById('post-content').innerHTML = `
+            <div class="text-center py-12">
+              <h2 class="text-2xl font-bold text-gray-800 mb-4">Post Not Found</h2>
+              <p class="text-gray-600">The requested post does not exist.</p>
+              <a href="/" class="mt-6 inline-block bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-300">Back to Home</a>
+            </div>
+          `;
+          return;
+        }
+
+        // Update Title
+        document.getElementById('post-title').textContent = post.title;
+
+        // Update Image
+        const postImage = document.getElementById('post-image').querySelector('img');
+        postImage.src = post.imageUrl || 'https://via.placeholder.com/800x400?text=' + encodeURIComponent(post.title);
+        postImage.alt = post.title;
+
+        // Update Date and Read Time
+        document.getElementById('post-date').textContent = new Date(post.timestamp).toLocaleDateString();
+        document.getElementById('post-read-time').textContent = `${Math.ceil(post.content.replace(/<[^>]+>/g, '').length / 200)} min read`;
+
+        // Update YouTube Video
+        const youtubeContainer = document.getElementById('post-youtube');
+        if (post.youtube && post.youtube.includes('youtube.com')) {
+          const videoId = post.youtube.match(/(?:v=)([^&]+)/)?.[1] || post.youtube.match(/youtu\.be\/([^?]+)/)?.[1];
+          if (videoId) {
+            youtubeContainer.querySelector('iframe').src = `https://www.youtube.com/embed/${videoId}`;
+            youtubeContainer.classList.remove('hidden');
+          }
+        }
+
+        // Update Content
+        document.getElementById('post-text').innerHTML = post.content;
+      }
     }
 
     // Initialize Post on Page Load
     loadPost();
 
-    // Search Function (Placeholder)
-    function searchPosts() {
-      const query = document.getElementById('search').value.trim();
-      if (query) {
-        alert(`Search functionality would show results for: ${query}`);
-      } else {
-        alert('Please enter a search term');
-      }
+    // Search Functionality (Copied from index.html for consistency)
+    const searchInput = document.getElementById('search');
+    const searchResults = document.getElementById('search-results');
+    let allPosts = [];
+    let debounceTimeout;
+
+    function debounce(func, wait) {
+      return function (...args) {
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(() => func.apply(this, args), wait);
+      };
     }
+
+    function loadSearchPosts() {
+      const postsRefRealtime = ref(dbRealtime, 'posts');
+      onValue(postsRefRealtime, (snapshot) => {
+        const posts = [];
+        snapshot.forEach((childSnapshot) => {
+          posts.push({ id: childSnapshot.key, source: 'realtime', ...childSnapshot.val() });
+        });
+        updateSearchPosts(posts);
+      });
+
+      const postsRefFirestore = collection(dbFirestore, 'posts');
+      onSnapshot(postsRefFirestore, (snapshot) => {
+        const posts = [];
+        snapshot.forEach((doc) => {
+          posts.push({ id: doc.id, source: 'firestore', ...doc.data() });
+        });
+        updateSearchPosts(posts);
+      });
+    }
+
+    function updateSearchPosts(newPosts) {
+      allPosts = [...allPosts.filter(p => !newPosts.some(np => np.id === p.id && np.source === p.source)), ...newPosts];
+      allPosts.sort((a, b) => b.timestamp - a.timestamp);
+      updateSearchResults(searchInput.value);
+    }
+
+    function updateSearchResults(query) {
+      query = query.trim().toLowerCase();
+      searchResults.innerHTML = '';
+      if (!query) {
+        searchResults.classList.add('hidden');
+        return;
+      }
+
+      const filteredPosts = allPosts
+        .filter(post => post.title.toLowerCase().includes(query))
+        .slice(0, 5);
+
+      if (filteredPosts.length === 0) {
+        searchResults.innerHTML = `
+          <div class="p-4 text-gray-600 text-center">
+            No results found for "${query}"
+          </div>
+        `;
+        searchResults.classList.remove('hidden');
+        return;
+      }
+
+      filteredPosts.forEach((post, index) => {
+        const resultItem = document.createElement('a');
+        resultItem.href = `posts/post${allPosts.indexOf(post) + 1}.html`;
+        resultItem.className = 'search-result-item flex items-center p-3 border-b border-gray-200 last:border-b-0';
+        resultItem.innerHTML = `
+          <img src="${post.imageUrl || 'https://via.placeholder.com/50x50?text=' + encodeURIComponent(post.title)}" 
+               alt="${post.title}" class="w-12 h-12 object-cover rounded-md mr-3">
+          <div class="flex-1">
+            <h4 class="text-sm font-semibold text-gray-800">${post.title}</h4>
+            <p class="text-xs text-gray-600 truncate">${post.content.replace(/<[^>]+>/g, '').substring(0, 50)}...</p>
+          </div>
+        `;
+        searchResults.appendChild(resultItem);
+      });
+
+      searchResults.classList.remove('hidden');
+    }
+
+    searchInput.addEventListener('input', debounce(() => {
+      updateSearchResults(searchInput.value);
+    }, 300));
+
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+        searchResults.classList.add('hidden');
+      }
+    });
+
+    searchInput.addEventListener('focus', () => {
+      if (searchInput.value.trim()) {
+        updateSearchResults(searchInput.value);
+      }
+    });
+
+    searchInput.addEventListener('keydown', (e) => {
+      const items = searchResults.querySelectorAll('.search-result-item');
+      if (!items.length) return;
+
+      let currentIndex = Array.from(items).findIndex(item => item.classList.contains('bg-primary-100'));
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (currentIndex < items.length - 1) {
+          if (currentIndex >= 0) items[currentIndex].classList.remove('bg-primary-100');
+          items[currentIndex + 1].classList.add('bg-primary-100');
+          items[currentIndex + 1].focus();
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (currentIndex > 0) {
+          items[currentIndex].classList.remove('bg-primary-100');
+          items[currentIndex - 1].classList.add('bg-primary-100');
+          items[currentIndex - 1].focus();
+        }
+      } else if (e.key === 'Enter' && currentIndex >= 0) {
+        e.preventDefault();
+        items[currentIndex].click();
+      }
+    });
+
+    // Initialize Search Posts
+    loadSearchPosts();
+
+    // Smooth Scrolling for Anchor Links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
   </script>
 </body>
 </html>
