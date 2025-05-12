@@ -278,6 +278,7 @@
         snapshot.forEach((childSnapshot) => {
           posts.push({ id: childSnapshot.key, source: 'realtime', ...childSnapshot.val() });
         });
+        console.log('Realtime Database posts:', posts);
         updatePosts(posts);
       }, (error) => {
         console.error('Error fetching Realtime Database posts:', error);
@@ -290,6 +291,7 @@
         snapshot.forEach((doc) => {
           posts.push({ id: doc.id, source: 'firestore', ...doc.data() });
         });
+        console.log('Firestore posts:', posts);
         updatePosts(posts);
       }, (error) => {
         console.error('Error fetching Firestore posts:', error);
@@ -297,7 +299,8 @@
 
       function updatePosts(newPosts) {
         allPosts = [...allPosts.filter(p => !newPosts.some(np => np.id === p.id && np.source === p.source)), ...newPosts];
-        allPosts.sort((a, b) => b.timestamp - a.timestamp); // Sort by timestamp descending
+        allPosts.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // Sort by timestamp descending
+        console.log('All sorted posts:', allPosts);
         renderPosts();
         updateSearchResults(document.getElementById('search').value);
       }
@@ -319,6 +322,7 @@
       }
 
       function createPostElement(post, index) {
+        console.log(`Creating post element for index ${index}:`, post);
         const postElement = document.createElement('article');
         postElement.className = 'bg-white rounded-xl overflow-hidden shadow-md card-hover animate-fade-in';
         postElement.innerHTML = `
@@ -337,7 +341,7 @@
             </div>
             <h3 class="text-xl font-bold mb-3">${post.title || 'Untitled'}</h3>
             <p class="text-gray-600 mb-4">${(post.content || '').replace(/<[^>]+>/g, '').substring(0, 100)}...</p>
-            <a href="post.html?index=${index}" class="text-primary-600 hover:text-primary-800 font-medium inline-flex items-center">
+            <a href="posts/post${index}.html" class="text-primary-600 hover:text-primary-800 font-medium inline-flex items-center">
               Read more
               <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -399,7 +403,7 @@
 
       const filteredPosts = allPosts
         .filter(post => post.title?.toLowerCase().includes(query))
-        .slice(0, 5); // Limit to 5 results
+        .slice(0, 5);
 
       if (filteredPosts.length === 0) {
         searchResults.innerHTML = `
@@ -413,7 +417,7 @@
 
       filteredPosts.forEach((post, index) => {
         const resultItem = document.createElement('a');
-        resultItem.href = `post.html?index=${allPosts.indexOf(post) + 1}`;
+        resultItem.href = `posts/post${allPosts.indexOf(post) + 1}.html`;
         resultItem.className = 'search-result-item flex items-center p-3 border-b border-gray-200 last:border-b-0';
         resultItem.innerHTML = `
           <img src="${post.imageUrl || 'https://via.placeholder.com/50x50?text=' + encodeURIComponent(post.title || 'No Title')}" 
@@ -433,21 +437,18 @@
       updateSearchResults(searchInput.value);
     }, 300));
 
-    // Hide search results when clicking outside
     document.addEventListener('click', (e) => {
       if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
         searchResults.classList.add('hidden');
       }
     });
 
-    // Show search results when clicking input
     searchInput.addEventListener('focus', () => {
       if (searchInput.value.trim()) {
         updateSearchResults(searchInput.value);
       }
     });
 
-    // Keyboard navigation for search results
     searchInput.addEventListener('keydown', (e) => {
       const items = searchResults.querySelectorAll('.search-result-item');
       if (!items.length) return;
