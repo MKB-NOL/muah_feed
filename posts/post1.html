@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Muah Feed - Read the latest post">
   <title>Muah Feed | Post</title>
-  <link rel="icon" type="image/png" href="../favicon.png">
+  <link rel="icon" type="image/png" href="favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -104,7 +104,7 @@
   <header class="sticky top-0 z-50 bg-white shadow-sm">
     <div class="container mx-auto px-4 py-4">
       <div class="flex justify-between items-center">
-        <a href="../index.html" class="flex items-center">
+        <a href="index.html" class="flex items-center">
           <h1 class="text-2xl font-bold gradient-text">Muah Feed</h1>
         </a>
         <div class="flex items-center space-x-4">
@@ -119,7 +119,7 @@
             </button>
             <div id="search-results" class="hidden absolute w-full md:w-96 bg-white border border-gray-300 rounded-lg shadow-lg mt-2"></div>
           </div>
-          <a href="../post.html" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-4 py-2 rounded-lg transition duration-300 border-highlight">
+          <a href="post.html" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-4 py-2 rounded-lg transition duration-300 border-highlight">
             Post
           </a>
         </div>
@@ -143,6 +143,10 @@
         <iframe class="w-full h-64 md:h-96 rounded-lg" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       </div>
       <div id="post-text" class="post-content prose prose-lg max-w-none text-gray-700 animate-fade-in"></div>
+      <nav class="flex justify-between mt-8">
+        <a id="prev-post" href="#" class="text-primary-600 hover:text-primary-800 font-medium">Previous Post</a>
+        <a id="next-post" href="#" class="text-primary-600 hover:text-primary-800 font-medium">Next Post</a>
+      </nav>
     </article>
   </main>
 
@@ -157,7 +161,7 @@
         <div>
           <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
           <ul class="space-y-2">
-            <li><a href="../index.html" class="text-gray-400 hover:text-white transition">Home</a></li>
+            <li><a href="index.html" class="text-gray-400 hover:text-white transition">Home</a></li>
             <li><a href="#" class="text-gray-400 hover:text-white transition">Posts</a></li>
             <li><a href="#" class="text-gray-400 hover:text-white transition">News</a></li>
             <li><a href="#" class="text-gray-400 hover:text-white transition">About</a></li>
@@ -209,6 +213,8 @@
     </div>
   </footer>
 
+  <!-- DOMPurify for sanitizing rich text -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.7/purify.min.js"></script>
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
@@ -234,7 +240,8 @@
 
     // Load Post
     function loadPost() {
-      const postIndex = 1; // For post1.html (newest post)
+      const urlParams = new URLSearchParams(window.location.search);
+      const postIndex = parseInt(urlParams.get('index')) || 1; // Default to 1 if invalid
       let allPosts = [];
 
       // Realtime Database Posts
@@ -266,23 +273,23 @@
       function updatePosts(newPosts) {
         allPosts = [...allPosts.filter(p => !newPosts.some(np => np.id === p.id && np.source === p.source)), ...newPosts];
         allPosts.sort((a, b) => b.timestamp - a.timestamp); // Sort by timestamp descending
-        renderPost();
+        renderPost(postIndex, allPosts);
       }
 
-      function renderPost() {
+      function renderPost(index, posts) {
         const postContent = document.getElementById('post-content');
         if (!postContent) {
           console.error('Post content element not found');
           return;
         }
 
-        const post = allPosts[postIndex - 1]; // 0-based index
+        const post = posts[index - 1]; // 0-based index
         if (!post) {
           postContent.innerHTML = `
             <div class="text-center py-12">
               <h2 class="text-2xl font-bold text-gray-800 mb-4">Post Not Found</h2>
               <p class="text-gray-600">The requested post does not exist.</p>
-              <a href="../index.html" class="mt-6 inline-block bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-300">Back to Home</a>
+              <a href="index.html" class="mt-6 inline-block bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-300">Back to Home</a>
             </div>
           `;
           return;
@@ -337,9 +344,29 @@
         // Update Content
         const postText = document.getElementById('post-text');
         if (postText) {
-          postText.innerHTML = post.content || '<p>No content available.</p>';
+          postText.innerHTML = DOMPurify.sanitize(post.content || '<p>No content available.</p>');
         } else {
           console.error('Post text element not found');
+        }
+
+        // Update Navigation Links
+        const prevPostLink = document.getElementById('prev-post');
+        const nextPostLink = document.getElementById('next-post');
+        if (prevPostLink && nextPostLink) {
+          if (index > 1) {
+            prevPostLink.href = `post.html?index=${index - 1}`;
+            prevPostLink.classList.remove('pointer-events-none', 'text-gray-400');
+          } else {
+            prevPostLink.href = '#';
+            prevPostLink.classList.add('pointer-events-none', 'text-gray-400');
+          }
+          if (index < posts.length) {
+            nextPostLink.href = `post.html?index=${index + 1}`;
+            nextPostLink.classList.remove('pointer-events-none', 'text-gray-400');
+          } else {
+            nextPostLink.href = '#';
+            nextPostLink.classList.add('pointer-events-none', 'text-gray-400');
+          }
         }
       }
 
@@ -350,7 +377,7 @@
             <div class="text-center py-12">
               <h2 class="text-2xl font-bold text-gray-800 mb-4">Error Loading Post</h2>
               <p class="text-gray-600">There was an issue fetching the post. Please try again later.</p>
-              <a href="../index.html" class="mt-6 inline-block bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-300">Back to Home</a>
+              <a href="index.html" class="mt-6 inline-block bg-primary-600 hover:bg-primary-700 text-white font-semibold px-6 py-2 rounded-lg transition duration-300">Back to Home</a>
             </div>
           `;
         }
@@ -362,7 +389,7 @@
       loadPost();
     });
 
-    // Search Functionality (Copied from index.html for consistency)
+    // Search Functionality
     const searchInput = document.getElementById('search');
     const searchResults = document.getElementById('search-results');
     let allPosts = [];
@@ -429,7 +456,7 @@
 
       filteredPosts.forEach((post, index) => {
         const resultItem = document.createElement('a');
-        resultItem.href = `post${allPosts.indexOf(post) + 1}.html`;
+        resultItem.href = `post.html?index=${allPosts.indexOf(post) + 1}`;
         resultItem.className = 'search-result-item flex items-center p-3 border-b border-gray-200 last:border-b-0';
         resultItem.innerHTML = `
           <img src="${post.imageUrl || 'https://via.placeholder.com/50x50?text=' + encodeURIComponent(post.title || 'No Title')}" 
