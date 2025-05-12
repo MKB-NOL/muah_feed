@@ -234,7 +234,146 @@
           </a>
           <a href="https://www.youtube.com/channel/UCg9U7NsZ3MQuqgDoHeItUrQ" target="_blank" class="text-gray-400 hover:text-white transition">
             <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path fill-rule="evenodd" d="M19.812 5.418c.861.23 1.538.907 1.768 1.768C21.998 8.746 22 12 22 12s0 3.255-.418 4.814a2.504 2.504 0 0 1-1.768 1.768c-1.56.419-7.814.419-7.814.419s-6.255 0-7.814-.419a2.505 2.505 0 0 1-1.768-1.768C2 15.255 2 12 2 12s0-3.255.417-4.814a2.507 2 торговли
+              <path fill-rule="evenodd" d="M19.812 5.418c.861.23 1.538.907 1.768 1.768C21.998 8.746 22 12 22 12s0 3.255-.418 4.814a2.504 2.504 0 0 1-1.768 1.768c-1.56.419-7.814.419-7.814.419s-6.255 0-7.814-.419a2.505 2.505 0 0 1-1.768-1.768C2 15.255 2 12 2 12s0-3.255.417-4.814a2.507 2.507 0 0 1 1.768-1.768C5.744 5 11.998 5 11.998 5s6.255 0 7.814.418ZM15.194 12 10 15V9l5.194 3Z" clip-rule="evenodd"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-database.js";
+    import { getFirestore, collection, onSnapshot, addDoc } from "https://www.gstatic.com/firebasejs/11.7.1/firebase-firestore.js";
+
+    // Firebase Configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCW2RJIku0JLJZTUu0YA9yKO8zjtX29fAo",
+      authDomain: "muah-feed.firebaseapp.com",
+      databaseURL: "https://muah-feed-default-rtdb.firebaseio.com",
+      projectId: "muah-feed",
+      storageBucket: "muah-feed.firebasestorage.app",
+      messagingSenderId: "442314397706",
+      appId: "1:442314397706:web:ebd610cf623b01253667f3",
+      measurementId: "G-FGBFJFBLM7"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const dbRealtime = getDatabase(app);
+    const dbFirestore = getFirestore(app);
+
+    // Load Posts
+    let allPosts = [];
+    function loadPosts() {
+      let realtimeFetched = false;
+      let firestoreFetched = false;
+
+      // Realtime Database Posts
+      const postsRefRealtime = ref(dbRealtime, 'posts');
+      onValue(postsRefRealtime, (snapshot) => {
+        const posts = [];
+        snapshot.forEach((childSnapshot) => {
+          const postData = childSnapshot.val();
+          posts.push({ id: childSnapshot.key, source: 'realtime', ...postData });
+        });
+        console.log('Realtime Database posts:', posts);
+        console.log('Realtime Database snapshot exists:', snapshot.exists());
+        console.log('Realtime Database post count:', posts.length);
+        realtimeFetched = true;
+        updatePosts(posts, 'realtime');
+      }, (error) => {
+        console.error('Error fetching Realtime Database posts:', error);
+        realtimeFetched = true;
+        renderError(`Failed to fetch Realtime Database posts: ${error.message}`);
+      });
+
+      // Firestore Posts
+      const postsRefFirestore = collection(dbFirestore, 'posts');
+      onSnapshot(postsRefFirestore, (snapshot) => {
+        const posts = [];
+        snapshot.forEach((doc) => {
+          const postData = doc.data();
+          posts.push({ id: doc.id, source: 'firestore', ...postData });
+        });
+        console.log('Firestore posts:', posts);
+        console.log('Firestore snapshot empty:', snapshot.empty);
+        console.log('Firestore post count:', posts.length);
+        firestoreFetched = true;
+        updatePosts(posts, 'firestore');
+      }, (error) => {
+        console.error('Error fetching Firestore posts:', error);
+        firestoreFetched = true;
+        renderError(`Failed to fetch Firestore posts: ${error.message}`);
+      });
+
+      function updatePosts(newPosts, source) {
+        // Deduplicate by id, prefer newer timestamp
+        newPosts.forEach(newPost => {
+          const existingIndex = allPosts.findIndex(p => p.id === newPost.id);
+          if (existingIndex >= 0) {
+            const existingPost = allPosts[existingIndex];
+            if ((newPost.timestamp || 0) > (existingPost.timestamp || 0)) {
+              allPosts[existingIndex] = newPost;
+            }
+          } else {
+            allPosts.push(newPost);
+          }
+        });
+
+        console.log(`Posts after ${source} update:`, allPosts);
+        console.log(`Total post count:`, allPosts.length);
+
+        // Render only after both sources are fetched or failed
+        if (realtimeFetched && firestoreFetched) {
+          allPosts.sort((a, b) => {
+            const timeA = a.timestamp || 0;
+            const timeB = b.timestamp || 0;
+            return timeB - timeA; // Sort descending
+          });
+          console.log('All sorted posts:', allPosts);
+          renderPosts();
+        }
+      }
+
+      function renderPosts() {
+        const featuredGrid = document.getElementById('featured-post-grid');
+        const allGrid = document.getElementById('all-post-grid');
+
+        if (!featuredGrid || !allGrid) {
+          console.error('Grid elements not found');
+          renderError('Internal error: Grid elements missing');
+          return;
+        }
+
+        featuredGrid.innerHTML = '';
+        allGrid.innerHTML = '';
+
+        if (allPosts.length === 0) {
+          console.warn('No posts available in database');
+          featuredGrid.innerHTML = `
+            <div class="text-center py-12 col-span-3">
+              <h3 class="text-xl font-bold text-gray-800 mb-4">No Posts Available</h3>
+              <p class="text-gray-600">No posts were found in the database. Please check your Firebase setup.</p>
+            </div>
+          `;
+          return;
+        }
+
+        // Render featured posts (newest 6)
+        allPosts.slice(0, 6).forEach((post, index) => {
+          const postElement = createPostElement(post, index);
+          featuredGrid.appendChild(postElement);
+        });
+
+        // Render all posts
+        allPosts.forEach((post, index) => {
+          const postElement = createPostElement(post, index);
+          allGrid.appendChild(postElement);
+        });
+      }
 
       function createPostElement(post, index) {
         console.log(`Creating post element for index ${index}:`, post);
@@ -242,7 +381,7 @@
         postElement.className = 'bg-white rounded-xl overflow-hidden shadow-md card-hover animate-fade-in';
         postElement.innerHTML = `
           <div class="relative">
-            <img src="${post.imageUrl || 'https://via.placeholder.com/800x400?text=' + encodeURIComponent(post wre.title || 'No Title')}" 
+            <img src="${post.imageUrl || 'https://via.placeholder.com/800x400?text=' + encodeURIComponent(post.title || 'No Title')}" 
                  alt="${post.title || 'Post'}" class="w-full h-56 object-cover">
             <div class="absolute top-4 left-4 bg-primary-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
               New
@@ -256,7 +395,7 @@
             </div>
             <h3 class="text-xl font-bold mb-3">${post.title || 'Untitled'}</h3>
             <p class="text-gray-600 mb-4">${(post.content || '').replace(/<[^>]+>/g, '').substring(0, 100)}...</p>
-            <a href="see.html?id=${post.id}&source=${post.source}" class="text-primary-600 hover:text-primary-800 font-medium inline-flex items-center">
+            <a href="posts/post${index + 1}.html" class="text-primary-600 hover:text-primary-800 font-medium inline-flex items-center">
               Read more
               <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -266,10 +405,24 @@
         `;
         return postElement;
       }
+
+      function renderError(message) {
+        const featuredGrid = document.getElementById('featured-post-grid');
+        if (featuredGrid) {
+          featuredGrid.innerHTML = `
+            <div class="text-center py-12 col-span-3">
+              <h3 class="text-xl font-bold text-gray-800 mb-4">Error Loading Posts</h3>
+              <p class="text-gray-600">There was an issue fetching posts. Please try again later.</p>
+              <p class="text-gray-600 mt-2">Debug Info: ${message}</p>
+            </div>
+          `;
+        }
+      }
     }
 
     // Initialize Posts on Page Load
     document.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM loaded for index.html');
       loadPosts();
     });
 
@@ -296,8 +449,7 @@
       }
     });
 
-    // Search Functionality
-
+    // Search Functionality
     const searchInput = document.getElementById('search');
     const searchResults = document.getElementById('search-results');
     let debounceTimeout;
