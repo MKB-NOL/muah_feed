@@ -279,6 +279,8 @@
           posts.push({ id: childSnapshot.key, source: 'realtime', ...childSnapshot.val() });
         });
         updatePosts(posts);
+      }, (error) => {
+        console.error('Error fetching Realtime Database posts:', error);
       });
 
       // Firestore Posts
@@ -289,6 +291,8 @@
           posts.push({ id: doc.id, source: 'firestore', ...doc.data() });
         });
         updatePosts(posts);
+      }, (error) => {
+        console.error('Error fetching Firestore posts:', error);
       });
 
       function updatePosts(newPosts) {
@@ -319,21 +323,21 @@
         postElement.className = 'bg-white rounded-xl overflow-hidden shadow-md card-hover animate-fade-in';
         postElement.innerHTML = `
           <div class="relative">
-            <img src="${post.imageUrl || 'https://via.placeholder.com/800x400?text=' + encodeURIComponent(post.title)}" 
-                 alt="${post.title}" class="w-full h-56 object-cover">
+            <img src="${post.imageUrl || 'https://via.placeholder.com/800x400?text=' + encodeURIComponent(post.title || 'No Title')}" 
+                 alt="${post.title || 'Post'}" class="w-full h-56 object-cover">
             <div class="absolute top-4 left-4 bg-primary-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
               New
             </div>
           </div>
           <div class="p-6">
             <div class="flex items-center text-sm text-gray-500 mb-2">
-              <span>${new Date(post.timestamp).toLocaleDateString()}</span>
+              <span>${post.timestamp ? new Date(post.timestamp).toLocaleDateString() : 'Unknown Date'}</span>
               <span class="mx-2">•</span>
-              <span>${Math.ceil(post.content.replace(/<[^>]+>/g, '').length / 200)} min read</span>
+              <span>${post.content ? Math.ceil(post.content.replace(/<[^>]+>/g, '').length / 200) : 0} min read</span>
             </div>
-            <h3 class="text-xl font-bold mb-3">${post.title}</h3>
-            <p class="text-gray-600 mb-4">${post.content.replace(/<[^>]+>/g, '').substring(0, 100)}...</p>
-            <a href="posts/post${index}.html" class="text-primary-600 hover:text-primary-800 font-medium inline-flex items-center">
+            <h3 class="text-xl font-bold mb-3">${post.title || 'Untitled'}</h3>
+            <p class="text-gray-600 mb-4">${(post.content || '').replace(/<[^>]+>/g, '').substring(0, 100)}...</p>
+            <a href="post.html?index=${index}" class="text-primary-600 hover:text-primary-800 font-medium inline-flex items-center">
               Read more
               <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -346,7 +350,9 @@
     }
 
     // Initialize Posts on Page Load
-    loadPosts();
+    document.addEventListener('DOMContentLoaded', () => {
+      loadPosts();
+    });
 
     // Newsletter Form Submission
     const newsletterForm = document.getElementById('newsletter-form');
@@ -366,6 +372,7 @@
         newsletterForm.reset();
         alert('Thank you for subscribing!');
       } catch (error) {
+        console.error('Error subscribing to newsletter:', error);
         alert(`Error: ${error.message}`);
       }
     });
@@ -391,7 +398,7 @@
       }
 
       const filteredPosts = allPosts
-        .filter(post => post.title.toLowerCase().includes(query))
+        .filter(post => post.title?.toLowerCase().includes(query))
         .slice(0, 5); // Limit to 5 results
 
       if (filteredPosts.length === 0) {
@@ -406,14 +413,14 @@
 
       filteredPosts.forEach((post, index) => {
         const resultItem = document.createElement('a');
-        resultItem.href = `posts/post${allPosts.indexOf(post) + 1}.html`;
+        resultItem.href = `post.html?index=${allPosts.indexOf(post) + 1}`;
         resultItem.className = 'search-result-item flex items-center p-3 border-b border-gray-200 last:border-b-0';
         resultItem.innerHTML = `
-          <img src="${post.imageUrl || 'https://via.placeholder.com/50x50?text=' + encodeURIComponent(post.title)}" 
-               alt="${post.title}" class="w-12 h-12 object-cover rounded-md mr-3">
+          <img src="${post.imageUrl || 'https://via.placeholder.com/50x50?text=' + encodeURIComponent(post.title || 'No Title')}" 
+               alt="${post.title || 'Post'}" class="w-12 h-12 object-cover rounded-md mr-3">
           <div class="flex-1">
-            <h4 class="text-sm font-semibold text-gray-800">${post.title}</h4>
-            <p class="text-xs text-gray-600 truncate">${post.content.replace(/<[^>]+>/g, '').substring(0, 50)}...</p>
+            <h4 class="text-sm font-semibold text-gray-800">${post.title || 'Untitled'}</h4>
+            <p class="text-xs text-gray-600 truncate">${(post.content || '').replace(/<[^>]+>/g, '').substring(0, 50)}...</p>
           </div>
         `;
         searchResults.appendChild(resultItem);
