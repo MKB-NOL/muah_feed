@@ -310,7 +310,6 @@
       });
 
       function updatePosts(newPosts, source) {
-        // Deduplicate by id, prefer newer timestamp
         newPosts.forEach(newPost => {
           const existingIndex = allPosts.findIndex(p => p.id === newPost.id);
           if (existingIndex >= 0) {
@@ -326,12 +325,11 @@
         console.log(`Posts after ${source} update:`, allPosts);
         console.log(`Total post count:`, allPosts.length);
 
-        // Render only after both sources are fetched or failed
         if (realtimeFetched && firestoreFetched) {
           allPosts.sort((a, b) => {
             const timeA = a.timestamp || 0;
             const timeB = b.timestamp || 0;
-            return timeB - timeA; // Sort descending
+            return timeB - timeA;
           });
           console.log('All sorted posts:', allPosts);
           renderPosts();
@@ -362,13 +360,11 @@
           return;
         }
 
-        // Render featured posts (newest 6)
         allPosts.slice(0, 6).forEach((post, index) => {
           const postElement = createPostElement(post, index);
           featuredGrid.appendChild(postElement);
         });
 
-        // Render all posts
         allPosts.forEach((post, index) => {
           const postElement = createPostElement(post, index);
           allGrid.appendChild(postElement);
@@ -395,7 +391,7 @@
             </div>
             <h3 class="text-xl font-bold mb-3">${post.title || 'Untitled'}</h3>
             <p class="text-gray-600 mb-4">${(post.content || '').replace(/<[^>]+>/g, '').substring(0, 100)}...</p>
-            <a href="posts/post${index + 1}.html" class="text-primary-600 hover:text-primary-800 font-medium inline-flex items-center">
+            <a href="see.html?id=${post.id}&source=${post.source}" class="text-primary-600 hover:text-primary-800 font-medium inline-flex items-center">
               Read more
               <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -483,9 +479,9 @@
         return;
       }
 
-      filteredPosts.forEach((post, index) => {
+      filteredPosts.forEach((post) => {
         const resultItem = document.createElement('a');
-        resultItem.href = `posts/post${allPosts.indexOf(post) + 1}.html`;
+        resultItem.href = `see.html?id=${post.id}&source=${post.source}`;
         resultItem.className = 'search-result-item flex items-center p-3 border-b border-gray-200 last:border-b-0';
         resultItem.innerHTML = `
           <img src="${post.imageUrl || 'https://via.placeholder.com/50x50?text=' + encodeURIComponent(post.title || 'No Title')}" 
