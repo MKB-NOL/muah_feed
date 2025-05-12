@@ -75,6 +75,14 @@
       box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.5);
       transition: box-shadow 0.3s ease;
     }
+    #search-results {
+      max-height: 400px;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+    .search-result-item:hover {
+      background-color: #fef2f2;
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans antialiased">
@@ -95,12 +103,14 @@
         <div class="flex items-center space-x-4">
           <div class="relative">
             <input type="text" id="search" placeholder="Search posts..." 
-                   class="w-full md:w-64 pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
-            <button onclick="searchPosts()" class="absolute right-3 top-2 text-gray-400 hover:text-primary-600">
+                   class="w-full md:w-64 pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                   aria-autocomplete="list" aria-controls="search-results" autocomplete="off">
+            <button class="absolute right-3 top-2 text-gray-400 hover:text-primary-600">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
             </button>
+            <div id="search-results" class="hidden absolute w-full md:w-96 bg-white border border-gray-300 rounded-lg shadow-lg mt-2"></div>
           </div>
           <a href="post.html" class="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-4 py-2 rounded-lg transition duration-300 border-highlight">
             Post
@@ -256,10 +266,10 @@
     const dbFirestore = getFirestore(app);
 
     // Load Posts from Realtime Database and Firestore
+    let allPosts = [];
     function loadPosts() {
       const featuredPostGrid = document.getElementById('featured-post-grid');
       const allPostGrid = document.getElementById('all-post-grid');
-      let allPosts = [];
 
       // Realtime Database Posts
       const postsRefRealtime = ref(dbRealtime, 'posts');
@@ -284,7 +294,11 @@
       function updatePosts(newPosts) {
         allPosts = [...allPosts.filter(p => !newPosts.some(np => np.id === p.id && np.source === p.source)), ...newPosts];
         allPosts.sort((a, b) => b.timestamp - a.timestamp); // Sort by timestamp descending
+        renderPosts();
+        updateSearchResults(document.getElementById('search').value);
+      }
 
+      function renderPosts() {
         // Featured Posts (6 newest)
         featuredPostGrid.innerHTML = '';
         allPosts.slice(0, 6).forEach((post, index) => {
@@ -356,15 +370,102 @@
       }
     });
 
-    // Search Function (Placeholder)
-    function searchPosts() {
-      const query = document.getElementById('search').value.trim();
-      if (query) {
-        alert(`Search functionality would show results for: ${query}`);
-      } else {
-        alert('Please enter a search term');
-      }
+    // Search Functionality
+    const searchInput = document.getElementById('search');
+    const searchResults = document.getElementById('search-results');
+    let debounceTimeout;
+
+    function debounce(func, wait) {
+      return function (...args) {
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(() => func.apply(this, args), wait);
+      };
     }
+
+    function updateSearchResults(query) {
+      query = query.trim().toLowerCase();
+      searchResults.innerHTML = '';
+      if (!query) {
+        searchResults.classList.add('hidden');
+        return;
+      }
+
+      const filteredPosts = allPosts
+        .filter(post => post.title.toLowerCase().includes(query))
+        .slice(0, 5); // Limit to 5 results
+
+      if (filteredPosts.length === 0) {
+        searchResults.innerHTML = `
+          <div class="p-4 text-gray-600 text-center">
+            No results found for "${query}"
+          </div>
+        `;
+        searchResults.classList.remove('hidden');
+        return;
+      }
+
+      filteredPosts.forEach((post, index) => {
+        const resultItem = document.createElement('a');
+        resultItem.href = `posts/post${allPosts.indexOf(post) + 1}.html`;
+        resultItem.className = 'search-result-item flex items-center p-3 border-b border-gray-200 last:border-b-0';
+        resultItem.innerHTML = `
+          <img src="${post.imageUrl || 'https://via.placeholder.com/50x50?text=' + encodeURIComponent(post.title)}" 
+               alt="${post.title}" class="w-12 h-12 object-cover rounded-md mr-3">
+          <div class="flex-1">
+            <h4 class="text-sm font-semibold text-gray-800">${post.title}</h4>
+            <p class="text-xs text-gray-600 truncate">${post.content.replace(/<[^>]+>/g, '').substring(0, 50)}...</p>
+          </div>
+        `;
+        searchResults.appendChild(resultItem);
+      });
+
+      searchResults.classList.remove('hidden');
+    }
+
+    searchInput.addEventListener('input', debounce(() => {
+      updateSearchResults(searchInput.value);
+    }, 300));
+
+    // Hide search results when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+        searchResults.classList.add('hidden');
+      }
+    });
+
+    // Show search results when clicking input
+    searchInput.addEventListener('focus', () => {
+      if (searchInput.value.trim()) {
+        updateSearchResults(searchInput.value);
+      }
+    });
+
+    // Keyboard navigation for search results
+    searchInput.addEventListener('keydown', (e) => {
+      const items = searchResults.querySelectorAll('.search-result-item');
+      if (!items.length) return;
+
+      let currentIndex = Array.from(items).findIndex(item => item.classList.contains('bg-primary-100'));
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (currentIndex < items.length - 1) {
+          if (currentIndex >= 0) items[currentIndex].classList.remove('bg-primary-100');
+          items[currentIndex + 1].classList.add('bg-primary-100');
+          items[currentIndex + 1].focus();
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (currentIndex > 0) {
+          items[currentIndex].classList.remove('bg-primary-100');
+          items[currentIndex - 1].classList.add('bg-primary-100');
+          items[currentIndex - 1].focus();
+        }
+      } else if (e.key === 'Enter' && currentIndex >= 0) {
+        e.preventDefault();
+        items[currentIndex].click();
+      }
+    });
 
     // Smooth Scrolling for Anchor Links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
