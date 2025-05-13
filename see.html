@@ -72,25 +72,33 @@
     .post-container {
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .post-media {
+      flex: 0 0 auto;
+      width: 100%;
     }
     .post-media img {
       width: 100%;
-      max-height: 400px;
+      max-height: 450px;
       object-fit: cover;
-      border-radius: 0.5rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     .post-media iframe {
       width: 100%;
-      max-height: 400px;
+      max-height: 450px;
       aspect-ratio: 16 / 9;
-      border-radius: 0.5rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
     .post-content {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 1.5rem;
     }
     .post-content img {
       max-width: 100%;
@@ -99,32 +107,37 @@
       margin: 1rem 0;
     }
     .post-content p {
-      margin-bottom: 1rem;
-      line-height: 1.6;
+      margin-bottom: 1.25rem;
+      line-height: 1.7;
+      font-size: 1.1rem;
     }
     .post-content h1, .post-content h2, .post-content h3 {
-      font-weight: bold;
-      margin: 1.5rem 0 1rem 0;
+      font-weight: 700;
+      margin: 1.5rem 0 1rem;
     }
     .post-content h1 {
-      font-size: 1.8rem;
+      font-size: 2rem;
     }
     .post-content h2 {
-      font-size: 1.5rem;
+      font-size: 1.6rem;
     }
     .post-content h3 {
-      font-size: 1.2rem;
+      font-size: 1.3rem;
     }
     .post-content ul, .post-content ol {
-      margin-left: 1.5rem;
-      margin-bottom: 1rem;
+      margin-left: 2rem;
+      margin-bottom: 1.25rem;
     }
     .post-content li {
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
     }
     .post-content a {
       color: #ef4444;
       text-decoration: underline;
+      transition: color 0.2s;
+    }
+    .post-content a:hover {
+      color: #b91c1c;
     }
     .post-content strong {
       font-weight: 700;
@@ -139,22 +152,29 @@
       text-decoration: line-through;
     }
     .post-content .ql-size-small {
-      font-size: 0.75em;
+      font-size: 0.85em;
     }
     .post-content .ql-size-large {
-      font-size: 1.5em;
+      font-size: 1.6em;
     }
     .post-content .ql-size-huge {
-      font-size: 2.5em;
+      font-size: 2.4em;
+    }
+    .metadata {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
     }
     @media (min-width: 768px) {
       .post-container {
         flex-direction: row;
-        flex-wrap: wrap;
+        align-items: flex-start;
       }
       .post-media {
         flex: 1;
         min-width: 300px;
+        max-width: 500px;
       }
       .post-content {
         flex: 2;
@@ -216,9 +236,9 @@
         <!-- Will be filled by JavaScript -->
       </div>
 
-      <!-- Post Header and Content -->
-      <div class="p-6 md:p-8 post-content">
-        <div class="flex items-center text-sm text-gray-500 mb-4">
+      <!-- Post Content -->
+      <div class="post-content p-6 md:p-8">
+        <div class="metadata text-sm text-gray-500 mb-4">
           <span id="post-date">Loading date...</span>
           <span class="mx-2">•</span>
           <span id="read-time">Loading read time...</span>
@@ -327,8 +347,7 @@
       console.log(`Loading post: id=${postId}, source=${postSource}`);
       if (!postId) {
         console.warn('No post ID provided in URL');
-        document.getElementById('post-title').textContent = 'Post Not Found';
-        document.getElementById('post-content').textContent = 'The requested post could not be found. Please check the URL.';
+        displayError('Post Not Found', 'The requested post could not be found. Please check the URL.');
         return;
       }
 
@@ -363,36 +382,53 @@
           throw new Error(`Post not found: id=${postId}, source=${postSource}`);
         }
 
+        // Ensure all fields are present (set defaults for missing)
+        postData = {
+          title: postData.title || 'Untitled Post',
+          content: postData.content || '<p>No content available.</p>',
+          imageUrl: postData.imageUrl || '',
+          youtube: postData.youtube || '',
+          timestamp: postData.timestamp || Date.now(),
+          id: postData.id,
+          source: postData.source
+        };
+
         displayPost(postData);
       } catch (error) {
         console.error('Error loading post:', error);
-        document.getElementById('post-title').textContent = 'Error Loading Post';
-        document.getElementById('post-content').innerHTML = `
-          There was an error loading the post. Please try again later.<br>
-          Debug Info: ${error.message}
-        `;
+        displayError('Error Loading Post', `There was an error loading the post: ${error.message}`);
       }
     }
 
     // Display Post Data
     function displayPost(post) {
       console.log('Displaying post:', post);
-      document.getElementById('post-title').textContent = post.title || 'Untitled Post';
-      document.title = `${post.title || 'Post'} | Muah Feed`;
 
+      // Update title
+      document.getElementById('post-title').textContent = post.title;
+      document.title = `${post.title} | Muah Feed`;
+
+      // Update date
       const postDate = post.timestamp ? new Date(post.timestamp) : new Date();
-      document.getElementById('post-date').textContent = postDate.toLocaleDateString();
+      document.getElementById('post-date').textContent = postDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
 
+      // Update read time
       const contentText = post.content ? post.content.replace(/<[^>]+>/g, '') : '';
       const readTime = Math.ceil(contentText.length / 200) || 1;
-      document.getElementById('read-time').textContent = `${readTime} min read`;
+      document.getElementById('post-read-time').textContent = `${readTime} min read`;
 
+      // Update content
       const postContent = document.getElementById('post-content');
-      postContent.innerHTML = DOMPurify.sanitize(post.content || '<p>No content available.</p>', {
+      postContent.innerHTML = DOMPurify.sanitize(post.content, {
         ADD_TAGS: ['iframe'],
         ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling']
       });
 
+      // Update media
       const mediaContainer = document.getElementById('post-media');
       if (post.youtube) {
         const youtubeId = extractYouTubeId(post.youtube);
@@ -401,9 +437,9 @@
             <iframe src="https://www.youtube.com/embed/${youtubeId}" 
                     frameborder="0" 
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen
-                    class="w-full"></iframe>
+                    allowfullscreen></iframe>
           `;
+          mediaContainer.style.display = 'block';
         } else {
           createImageMedia(post, mediaContainer);
         }
@@ -414,18 +450,30 @@
       }
     }
 
+    // Create Image Media
     function createImageMedia(post, container) {
+      const imgSrc = post.imageUrl || `https://via.placeholder.com/800x450?text=${encodeURIComponent(post.title)}`;
       container.innerHTML = `
-        <img src="${post.imageUrl || 'https://via.placeholder.com/800x400?text=' + encodeURIComponent(post.title || 'No Image')}" 
-             alt="${post.title || 'Post Image'}" 
+        <img src="${imgSrc}" 
+             alt="${post.title}" 
              class="w-full">
       `;
+      container.style.display = 'block';
     }
 
+    // Extract YouTube ID
     function extractYouTubeId(url) {
       const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
       const match = url.match(regExp);
       return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    // Display Error
+    function displayError(title, message) {
+      document.getElementById('post-title').textContent = title;
+      document.getElementById('post-content').innerHTML = message;
+      document.getElementById('post-media').style.display = 'none';
+      document.getElementById('metadata').style.display = 'none';
     }
 
     // Search Functionality
