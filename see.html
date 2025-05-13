@@ -405,48 +405,71 @@
       console.log('Displaying post:', post);
 
       // Update title
-      document.getElementById('post-title').textContent = post.title;
-      document.title = `${post.title} | Muah Feed`;
+      const titleElement = document.getElementById('post-title');
+      if (titleElement) {
+        titleElement.textContent = post.title;
+        document.title = `${post.title} | Muah Feed`;
+      } else {
+        console.error('Element with ID "post-title" not found');
+      }
 
       // Update date
+      const dateElement = document.getElementById('post-date');
       const postDate = post.timestamp ? new Date(post.timestamp) : new Date();
-      document.getElementById('post-date').textContent = postDate.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
+      if (dateElement) {
+        dateElement.textContent = postDate.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+      } else {
+        console.error('Element with ID "post-date" not found');
+      }
 
       // Update read time
+      const readTimeElement = document.getElementById('read-time');
       const contentText = post.content ? post.content.replace(/<[^>]+>/g, '') : '';
       const readTime = Math.ceil(contentText.length / 200) || 1;
-      document.getElementById('post-read-time').textContent = `${readTime} min read`;
+      if (readTimeElement) {
+        readTimeElement.textContent = `${readTime} min read`;
+      } else {
+        console.error('Element with ID "read-time" not found');
+      }
 
       // Update content
-      const postContent = document.getElementById('post-content');
-      postContent.innerHTML = DOMPurify.sanitize(post.content, {
-        ADD_TAGS: ['iframe'],
-        ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling']
-      });
+      const contentElement = document.getElementById('post-content');
+      if (contentElement) {
+        contentElement.innerHTML = DOMPurify.sanitize(post.content, {
+          ADD_TAGS: ['iframe'],
+          ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling']
+        });
+      } else {
+        console.error('Element with ID "post-content" not found');
+      }
 
       // Update media
       const mediaContainer = document.getElementById('post-media');
-      if (post.youtube) {
-        const youtubeId = extractYouTubeId(post.youtube);
-        if (youtubeId) {
-          mediaContainer.innerHTML = `
-            <iframe src="https://www.youtube.com/embed/${youtubeId}" 
-                    frameborder="0" 
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen></iframe>
-          `;
-          mediaContainer.style.display = 'block';
-        } else {
+      if (mediaContainer) {
+        if (post.youtube) {
+          const youtubeId = extractYouTubeId(post.youtube);
+          if (youtubeId) {
+            mediaContainer.innerHTML = `
+              <iframe src="https://www.youtube.com/embed/${youtubeId}" 
+                      frameborder="0" 
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                      allowfullscreen></iframe>
+            `;
+            mediaContainer.style.display = 'block';
+          } else {
+            createImageMedia(post, mediaContainer);
+          }
+        } else if (post.imageUrl) {
           createImageMedia(post, mediaContainer);
+        } else {
+          mediaContainer.style.display = 'none';
         }
-      } else if (post.imageUrl) {
-        createImageMedia(post, mediaContainer);
       } else {
-        mediaContainer.style.display = 'none';
+        console.error('Element with ID "post-media" not found');
       }
     }
 
@@ -470,10 +493,33 @@
 
     // Display Error
     function displayError(title, message) {
-      document.getElementById('post-title').textContent = title;
-      document.getElementById('post-content').innerHTML = message;
-      document.getElementById('post-media').style.display = 'none';
-      document.getElementById('metadata').style.display = 'none';
+      const titleElement = document.getElementById('post-title');
+      if (titleElement) {
+        titleElement.textContent = title;
+      } else {
+        console.error('Element with ID "post-title" not found');
+      }
+
+      const contentElement = document.getElementById('post-content');
+      if (contentElement) {
+        contentElement.innerHTML = message;
+      } else {
+        console.error('Element with ID "post-content" not found');
+      }
+
+      const mediaContainer = document.getElementById('post-media');
+      if (mediaContainer) {
+        mediaContainer.style.display = 'none';
+      } else {
+        console.error('Element with ID "post-media" not found');
+      }
+
+      const metadataElement = document.querySelector('.metadata');
+      if (metadataElement) {
+        metadataElement.style.display = 'none';
+      } else {
+        console.error('Element with class "metadata" not found');
+      }
     }
 
     // Search Functionality
